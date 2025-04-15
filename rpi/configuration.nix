@@ -7,6 +7,7 @@
       ./monitoring.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
+      ./backupper.nix
     ];
 
   boot.loader.grub.enable = false;
@@ -51,4 +52,6 @@
   };
 
   services.miniflux_wrapper.enable = true;
+
+  services.backupper.enable = true;
 }
