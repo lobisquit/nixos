@@ -229,6 +229,7 @@ in
       startAt = "*:15/30";
     };
 
+    services.nginx_wrapper.enable = true;
     services.nginx.virtualHosts."${cfg.baseUrl}" = {
       enableACME = true;
       forceSSL = true;

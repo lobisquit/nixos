@@ -82,6 +82,7 @@ in
       };
     };
 
+    services.nginx_wrapper.enable = true;
     services.nginx.virtualHosts."storage.lovisotto.it" = {
       enableACME = true;
       forceSSL = true;

@@ -60,6 +60,7 @@ in
       adminCredentialsFile = secrets.miniflux_admin_credentials.path;
     };
 
+    services.nginx_wrapper.enable = true;
     services.nginx.virtualHosts."news.lovisotto.it" = {
       enableACME = true;
       forceSSL = true;
