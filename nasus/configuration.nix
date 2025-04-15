@@ -109,5 +109,9 @@
   services.podcasts_fetcher = {
     enable = true;
     podcastDir = "/mnt/storage_drive/podcasts";
+    protectedPaths = [
+      config.services.sftpd_storage.data_directory
+      config.services.backupper.hdd_mountpoint
+    ];
   };
 }
