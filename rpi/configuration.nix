@@ -4,6 +4,7 @@
   imports =
     [
       ./hardware-configuration.nix
+      ./monitoring.nix
     ];
 
   boot.loader.grub.enable = false;
@@ -22,6 +23,7 @@
     gnumake
     sops
     tmux
+    age
   ];
 
   services.openssh = {
@@ -35,4 +37,6 @@
 
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/root/.config/sops/age/keys.txt";
+
+  services.monitoring.enable = true;
 }
