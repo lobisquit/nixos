@@ -20,6 +20,21 @@ in
       type = lib.types.bool;
       default = false;
     };
+
+    ttyUSBVendorId = lib.mkOption {
+      type = lib.types.str;
+      default = "1a86";
+    };
+
+    ttyUSBProductId = lib.mkOption {
+      type = lib.types.str;
+      default = "7523";
+    };
+
+    ttyDoorman = lib.mkOption {
+      type = lib.types.str;
+      default = "ttyDOORMAN";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -41,6 +56,19 @@ in
       group = config.users.users.doorman.group;
     };
 
+    services.udev.extraRules = lib.concatStrings [
+      ''SUBSYSTEM=="tty", ''
+      ''ATTRS{idVendor}=="${cfg.ttyUSBVendorId}", ''
+      ''ATTRS{idProduct}=="${cfg.ttyUSBProductId}", ''
+      ''SYMLINK+="${cfg.ttyDoorman}"''
+    ] + "\n" +
+    lib.concatStrings [
+      ''SUBSYSTEM=="tty", ''
+      ''ATTRS{idVendor}=="${cfg.ttyUSBVendorId}", ''
+      ''ATTRS{idProduct}=="${cfg.ttyUSBProductId}", ''
+      ''ENV{SYSTEMD_WANTS}+="doorman.service"''
+    ];
+
     systemd.services.doorman = {
       description = "Run camera when door is open";
 
@@ -57,9 +85,8 @@ in
         User = config.users.users.doorman.name;
         PrivateTmp = true;
         EnvironmentFile = secrets.doorman.path;
+        Environment = [ "SERIAL_DEV=/dev/${cfg.ttyDoorman}" ];
       };
-
-      wantedBy = [ "multi-user.target" ];
     };
   };
 }
