@@ -11,7 +11,7 @@ groups:
     rules:
       # disk usage
       - record: resources:disk_usage
-        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
+        expr: 1 - node_filesystem_avail_bytes / node_filesystem_size_bytes
 
       - alert: resources:high_disk_usage
         expr: resources:disk_usage{fstype="ext4"} > 0.8
