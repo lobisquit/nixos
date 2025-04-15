@@ -64,6 +64,12 @@ with lib;
 
     systemd.services.backup_remote = {
       description = "Perform backup to remote location";
+      requires = if miniflux_cfg.enable
+                 then [ "miniflux_backup_admin_opml.service" ]
+                 else [];
+      after = if miniflux_cfg.enable
+              then [ "miniflux_backup_admin_opml.service" ]
+              else [];
 
       path = with pkgs; [ restic ];
 
