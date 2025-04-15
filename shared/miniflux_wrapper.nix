@@ -27,14 +27,14 @@ in
       default = 8036;
     };
 
-    opmlBackupFolder = mkOption {
+    backupFolder = mkOption {
       type = types.str;
-      default = "/var/lib/miniflux_opml_backup";
+      default = "/var/lib/miniflux_backup";
     };
 
-    opmlBackupGroup = mkOption {
+    backupGroup = mkOption {
       type = types.str;
-      default = "miniflux_opml";
+      default = "miniflux_backup";
     };
   };
 
@@ -73,11 +73,11 @@ in
       };
     };
 
-    users.groups."${cfg.opmlBackupGroup}" = {};
+    users.groups."${cfg.backupGroup}" = {};
     systemd.tmpfiles.settings.miniflux = {
-      "${cfg.opmlBackupFolder}".d = {
+      "${cfg.backupFolder}".d = {
         user = config.users.users.miniflux.name;
-        group = cfg.opmlBackupGroup;
+        group = cfg.backupGroup;
         mode = "0755";
       };
     };
@@ -96,18 +96,25 @@ in
         PrivateNetwork = true;
         PrivateTmp = true;
         BindPaths = [
-          cfg.opmlBackupFolder
+          cfg.backupFolder
         ];
         BindReadOnlyPaths = [
           "/nix/store"
           "/run/postgresql"
+          "/etc/passwd"
         ];
       };
 
-      path = with pkgs; [ miniflux ];
+      path = with pkgs; [
+        miniflux
+        postgresql
+      ];
       script = ''
           miniflux -export-user-feeds "$ADMIN_USERNAME" \
-              > "${cfg.opmlBackupFolder}/$ADMIN_USERNAME.opml"
+              > "${cfg.backupFolder}/$ADMIN_USERNAME.opml"
+
+          pg_dump miniflux \
+              > "${cfg.backupFolder}/postgres_miniflux.sql"
       '';
     };
   };
