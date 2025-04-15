@@ -4,6 +4,7 @@ import serial
 import os
 from pathlib import Path
 import time
+import sys
 
 def env(name):
     return os.environ[name]
@@ -27,7 +28,18 @@ if __name__ == '__main__':
             time.sleep(0.010)
 
             # blocking call for next character
-            next_byte = ser.read(1)
+            try:
+                next_byte = ser.read(1)
+            except serial.SerialException as ex:
+                # raise the exception if the serial device failed but
+                # it is still there
+                if Path(env('SERIAL_DEV')).exists():
+                    raise ex
+                else:
+                    print('Could not read command: serial device disappeared',
+                          flush=True)
+                    sys.exit(0)
+
             if len(next_byte) == 0:
                 continue
 
