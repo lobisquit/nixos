@@ -16,7 +16,7 @@
     LC_TIME = "it_IT.UTF-8";
   };
 
-  console.keyMap = "it2";
+  console.keyMap = "it";
 
   services.xserver.xkb = {
     layout = "it";
