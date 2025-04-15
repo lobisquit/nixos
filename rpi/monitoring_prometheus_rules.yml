@@ -13,8 +13,8 @@ groups:
       - record: resources:disk_usage
         expr: 1 - node_filesystem_avail_bytes / node_filesystem_size_bytes
 
-      - alert: resources:high_disk_usage
-        expr: resources:disk_usage{fstype="ext4"} > 0.8
+      - alert: resources:high_disk_usage_root
+        expr: resources:disk_usage{mountpoint="/"} > 0.8
         annotations:
           summary: "[{{ $labels.job }}] {{ $labels.mountpoint }} is almost full"
           description: |
