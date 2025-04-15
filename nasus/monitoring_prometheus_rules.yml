@@ -80,13 +80,6 @@ groups:
       - record: systemd:is_active
         expr: systemd:list{state="active"}
 
-      - alert: systemd:nasus:nginx:not_active
-        expr: |
-          absent(systemd:is_active{job="nasus", name="nginx.service"}) or
-          systemd:is_active{job="nasus", name="nginx.service"} == 0
-        annotations:
-          summary: "[{{ $labels.job }}] nginx is down"
-
       - alert: systemd:nasus:sshd:not_active
         expr: |
           absent(systemd:is_active{job="nasus", name="sshd.service"}) or
