@@ -13,6 +13,8 @@
     "console=ttyS1,115200n8"
   ];
 
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+
   networking.hostName = "rpi";
 
   time.timeZone = "Europe/Rome";
