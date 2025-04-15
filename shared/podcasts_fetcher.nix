@@ -58,6 +58,7 @@ in
 
     systemd.tmpfiles.rules = [
       "d ${cfg.podcastDir} 0750 podcasts_fetcher ${config.services.nginx.group} -"
+      "d ${config.users.users.podcasts_fetcher.home}.cache 0750 podcasts_fetcher podcasts_fetcher -"
     ];
 
     sops.secrets.podcasts_fetcher_ilpost_credentials = {

@@ -5,6 +5,8 @@
     [
       ./hardware-configuration.nix
       ./monitoring.nix
+      ./podcasts_fetcher.nix
+      ./miniflux_wrapper.nix
     ];
 
   boot.loader.grub.enable = false;
@@ -41,4 +43,12 @@
   sops.age.keyFile = "/root/.config/sops/age/keys.txt";
 
   services.monitoring.enable = true;
+
+  services.podcasts_fetcher = {
+    enable = true;
+    podcastDir = "/mnt/storage_drive/podcasts";
+    protectedPaths = [];
+  };
+
+  services.miniflux_wrapper.enable = true;
 }

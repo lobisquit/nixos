@@ -77,7 +77,7 @@
 
   services.telegram_reminder.enable = true;
 
-  services.miniflux_wrapper.enable = true;
+  services.miniflux_wrapper.enable = false;
 
   services.filebrowser_wrapper = {
     enable = false;
@@ -107,7 +107,7 @@
   };
 
   services.podcasts_fetcher = {
-    enable = true;
+    enable = false;
     podcastDir = "/mnt/storage_drive/podcasts";
     protectedPaths = [
       config.services.sftpd_storage.data_directory

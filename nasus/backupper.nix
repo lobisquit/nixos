@@ -5,15 +5,9 @@ with lib;
 let
   cfg = config.services.backupper;
   secrets = config.sops.secrets;
-  miniflux_cfg = config.services.miniflux_wrapper;
 in
 
 {
-  imports =
-    [
-      ./miniflux_wrapper.nix
-    ];
-
   options.services.backupper = {
 
     enable = lib.mkOption {
@@ -35,11 +29,6 @@ in
       type = lib.types.path;
       default = "/mnt/backup_hdd/";
     };
-
-    postgres_backup = lib.mkOption {
-      type = lib.types.bool;
-      default = miniflux_cfg.enable;
-    };
   };
 
   config = mkIf cfg.enable {
@@ -50,33 +39,6 @@ in
       isSystemUser = true;
       group = cfg.group;
       uid = 123;
-    };
-
-    users.users.postgres = {};
-
-    systemd.services.postgresql_create_backupper_user = {
-      description = "Set proper postgresql user for backupper";
-      before = [ "backup_local.service"
-                 "backup_remote.service"
-               ];
-
-      serviceConfig = {
-        Type = "oneshot";
-        User = config.users.users.postgres.name;
-
-        TemporaryFileSystem = "/";
-        PrivateNetwork = true;
-        BindReadOnlyPaths = [
-          "/etc/passwd"
-          "/nix/store"
-          "/run/postgresql"
-        ];
-      };
-
-      path = with pkgs; [ postgresql ];
-      script = ''psql -c "DROP ROLE IF EXISTS backupper;
-                          CREATE ROLE backupper LOGIN;
-                          GRANT pg_read_all_data TO backupper;"'';
     };
 
     sops.secrets.restic_remote_configuration = {
@@ -91,22 +53,10 @@ in
       group = config.users.users.backupper.group;
     };
 
-    sops.secrets.miniflux_token = {
-      mode = "0400";
-      owner = config.users.users.backupper.name;
-      group = config.users.users.backupper.group;
-    };
-
     systemd.services.backup_remote = {
       description = "Perform backup to remote location";
-      requires = [ "postgresql_create_backupper_user.service" ];
-      after = [ "postgresql_create_backupper_user.service" ];
 
-      path = with pkgs; [
-        restic
-        curl
-        postgresql
-      ];
+      path = with pkgs; [ restic ];
 
       script = "exec ${./backupper.sh} Documenti";
 
@@ -116,12 +66,9 @@ in
 
         EnvironmentFile = [
           secrets.restic_remote_configuration.path
-          secrets.miniflux_token.path
         ];
         Environment = [
-          "MINIFLUX_PORT=${ toString miniflux_cfg.internalPort }"
           "DATA_DIR=${cfg.data_directory}"
-          "POSTGRES_BACKUP=${if cfg.postgres_backup then "y" else ""}"
         ];
 
         TemporaryFileSystem = "/";
@@ -136,7 +83,6 @@ in
           "/etc/passwd"
           "/nix/store"
           cfg.data_directory
-          "/run/postgresql"
         ];
       };
 
@@ -157,15 +103,12 @@ in
 
     systemd.services.backup_local = {
       description = "Perform backup to local location";
-      requires = [ "mnt-backup_hdd.mount"
-                   "postgresql_create_backupper_user.service" ];
-      after = [ "mnt-backup_hdd.mount"
-                "postgresql_create_backupper_user.service" ];
+      requires = [ "mnt-backup_hdd.mount" ];
+      after = [ "mnt-backup_hdd.mount" ];
 
       path = with pkgs; [
         restic
         curl
-        postgresql
       ];
 
       preStart = "sleep 5";
@@ -177,13 +120,10 @@ in
 
         EnvironmentFile = [
           secrets.restic_local_configuration.path
-          secrets.miniflux_token.path
         ];
         Environment = [
-          "MINIFLUX_PORT=${ toString miniflux_cfg.internalPort }"
           "RESTIC_REPOSITORY=${cfg.hdd_mountpoint}/home/restic-repo"
           "DATA_DIR=${cfg.data_directory}"
-          "POSTGRES_BACKUP=${if cfg.postgres_backup then "y" else ""}"
         ];
 
         TemporaryFileSystem = "/";
@@ -197,7 +137,6 @@ in
           "/etc/passwd"
           "/nix/store"
           cfg.data_directory
-          "/run/postgresql"
         ];
       };
     };
