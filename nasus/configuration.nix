@@ -11,7 +11,6 @@
       ./filebrowser_wrapper.nix
       ./miniflux_wrapper.nix
       ./doorman.nix
-      ./nginx_wrapper.nix
       ./monitoring.nix
       ./transmission_wrapper.nix
       ./samba_wrapper.nix

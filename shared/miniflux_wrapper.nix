@@ -8,6 +8,8 @@ let
 in
 
 {
+  imports = [ ./nginx_wrapper.nix ];
+
   options.services.miniflux_wrapper = {
 
     enable = lib.mkOption {
