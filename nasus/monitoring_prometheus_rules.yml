@@ -1,0 +1,96 @@
+groups:
+  - name: monitoring
+    rules:
+      - alert: monitoring:down
+        expr: up == 0
+        annotations:
+          summary: "[{{ $labels.job }}]: monitoring for is down"
+          description: "Instance {{ $labels.instance }} of is down for {{ $labels.job }}"
+
+  - name: resources
+    rules:
+      # disk usage
+      - record: resources:disk_usage
+        expr: node_filesystem_avail_bytes / node_filesystem_size_bytes
+
+      - alert: resources:high_disk_usage
+        expr: resources:disk_usage{fstype="ext4"} > 0.8
+        annotations:
+          summary: "[{{ $labels.job }}] {{ $labels.mountpoint }} is almost full"
+          description: |
+            In {{ $labels.job }}, disk {{ $labels.device }} mounted on
+            {{ $labels.mountpoint }} is more than 80% occupied"
+
+      # disk health
+      - alert: resources:disk_not_healthy
+        expr: smartmon_device_smart_healthy < 1
+        annotations:
+          summary: "[{{ $labels.job }}] {{ $labels.disk }} is not healthy"
+          description: |
+            Device is not healthy according to S.M.A.R.T. metrics.
+
+      # ram usage
+      - record: resources:ram_usage
+        expr: |
+          1 - (node_memory_MemFree_bytes +
+               node_memory_Cached_bytes +
+               node_memory_Buffers_bytes) / node_memory_MemTotal_bytes
+
+      - alert: resources:high_ram_usage
+        expr: resources:ram_usage > 0.8
+        annotations:
+          summary: "[{{ $labels.job }}] RAM is almost full"
+
+      # swap usage
+      - record: resources:swap_usage
+        expr: 1 - (node_memory_SwapFree_bytes + node_memory_SwapCached_bytes) / node_memory_SwapTotal_bytes
+
+      - alert: resources:high_swap_usage
+        expr: resources:swap_usage > 0.3
+        annotations:
+          summary: "[{{ $labels.job }}] Swap too much swap is in use"
+
+      # cpu usage
+      - record: resources:cpu_usage
+        expr: 1 - rate(node_cpu_seconds_total{mode="idle"}[1m])
+
+      # network rate (uplink, downlink)
+      - record: resources:network_receive_rate
+        expr: rate(node_network_receive_bytes_total[30s])
+
+      - record: resources:network_transmit_rate
+        expr: rate(node_network_receive_bytes_total[30s])
+
+  - name: systemd
+    interval: 3s
+
+    rules:
+      - record: systemd:list
+        expr: node_systemd_unit_state
+
+      # services that must be active
+      - record: systemd:is_active
+        expr: systemd:list{state="active"}
+
+      - alert: systemd:nasus:nginx:not_active
+        expr: |
+          absent(systemd:is_active{job="nasus", name="nginx.service"}) or
+          systemd:is_active{job="nasus", name="nginx.service"} == 0
+        annotations:
+          summary: "[{{ $labels.job }}] nginx is down"
+
+      - alert: systemd:nasus:sshd:not_active
+        expr: |
+          absent(systemd:is_active{job="nasus", name="sshd.service"}) or
+          systemd:is_active{job="nasus", name="sshd.service"} == 0
+        annotations:
+          summary: "[{{ $labels.job }}] SSH daemon is not running"
+
+      # services that fail
+      - record: systemd:is_failed
+        expr: systemd:list{state="failed"}
+
+      - alert: systemd:any:failed
+        expr: systemd:is_failed == 1
+        annotations:
+          summary: "[{{ $labels.job }}] SystemD unit {{ $labels.name }} has failed"

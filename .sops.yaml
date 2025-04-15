@@ -1,0 +1,10 @@
+keys:
+  - &lobisquit-pc age15tnsvgx3exv822du98vyhrs4u3wv046l3g8gv3ytf9072zv5pqyqd466wa
+  - &nasus age1a9vpdqf3pzwqgvuws0x3ym20dmduhplp24pgf3jlwd6qma5sjfvsx9yvrz
+
+creation_rules:
+  - path_regex: "[^/]+\\.(yaml|json|env|ini)$"
+    key_groups:
+      - age:
+        - *lobisquit-pc
+        - *nasus
