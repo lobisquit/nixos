@@ -41,6 +41,15 @@
               sops-nix_stable.nixosModules.sops
             ];
           };
+
+          rpi = nixpkgs_stable.lib.nixosSystem {
+            specialArgs = {inherit inputs outputs;};
+            system = "aarch64-linux";
+            modules = [
+              ./rpi/configuration.nix
+              sops-nix_stable.nixosModules.sops
+            ];
+          };
         };
 
         homeConfigurations = {
