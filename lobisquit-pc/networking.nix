@@ -26,6 +26,8 @@ in
          "x-systemd.after=network-online.target"
         "nofail,noauto"
         "_netdev"
+        "vers=3.0,cache=strict"
+        "nounix,noserverino"
         "credentials=${sops_secrets.smb_enrico.path}"
       ];
     };
@@ -37,6 +39,8 @@ in
         "x-systemd.after=network-online.target"
         "nofail,noauto"
         "_netdev"
+        "vers=3.0,cache=strict"
+        "nounix,noserverino"
         "credentials=${sops_secrets.smb_enrico.path}"
       ];
     };
