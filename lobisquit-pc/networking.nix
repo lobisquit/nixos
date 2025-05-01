@@ -59,7 +59,7 @@ in
       peers = [
         {
           publicKey = "Wb6v3aDIUvHLlQ76r32ZfzoMkd5matP2YcQt9IOWe3Q=";
-          allowedIPs = [ "192.168.77.0/24" "10.0.0.0/24" ];
+          allowedIPs = [ "192.168.77.0/24" "10.0.0.0/24" "10.0.14.0/24" ];
           endpoint = "home.lovisotto.it:51190";
           persistentKeepalive = 60;
         }
