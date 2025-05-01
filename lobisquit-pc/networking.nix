@@ -17,35 +17,6 @@ in
 
   environment.systemPackages = [ pkgs.cifs-utils ];
 
-  fileSystems = {
-    "/mnt/transmission" = {
-      device = "//nasus.home.lovisotto.it/downloads";
-      fsType = "cifs";
-      options = [
-        "x-systemd.automount"
-         "x-systemd.after=network-online.target"
-        "nofail,noauto"
-        "_netdev"
-        "vers=3.0,cache=strict"
-        "nounix,noserverino"
-        "credentials=${sops_secrets.smb_enrico.path}"
-      ];
-    };
-    "/mnt/others" = {
-      device = "//nasus.home.lovisotto.it/others";
-      fsType = "cifs";
-      options = [
-        "x-systemd.automount"
-        "x-systemd.after=network-online.target"
-        "nofail,noauto"
-        "_netdev"
-        "vers=3.0,cache=strict"
-        "nounix,noserverino"
-        "credentials=${sops_secrets.smb_enrico.path}"
-      ];
-    };
-  };
-
   sops.secrets = {
     wireguard_private_key = { };
   };
