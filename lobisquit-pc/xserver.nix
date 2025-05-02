@@ -6,10 +6,5 @@
 
   services.displayManager.sddm = {
     enable = true;
-    settings = {
-      X11 = {
-        ServerArguments = "-nolisten tcp -dpi 96";
-      };
-    };
   };
 }
