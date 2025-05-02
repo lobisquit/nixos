@@ -33,8 +33,8 @@ update:
 no-uncommitted-changes:
 	@git diff --quiet
 
-auto_upgrade: no-uncommitted-changes update
+auto_upgrade-%: no-uncommitted-changes update
 	git add flake.lock
 	git commit -m 'Update'
-	make switch
-	make clean
+	make switch-$*
+	make clean-$*
