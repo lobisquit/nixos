@@ -150,6 +150,8 @@ class IlPostScraper:
             self.click_when_ready((By.CSS_SELECTOR, '[aria-label=Play]'))
             log.info("Play button clicked")
 
+            previous_progress_value = None
+
             while float(progress_bar.get_attribute('value')) < \
                   float(progress_bar.get_attribute('max')):
                 progress_value = float(progress_bar.get_attribute('value'))
@@ -160,6 +162,11 @@ class IlPostScraper:
                 if progress_value < delta or progress_value > max_value - delta:
                     log.info(f'{progress_value} {max_value}')
 
+                # non-progressing bar means an error has happened
+                if previous_progress_value == progress_value:
+                    raise ValueError(f"Progress bar did not advance from {previous_progress_value}")
+
+                previous_progress_value = progress_value
                 time.sleep(1)
 
     def get_description(self, episode_url):
