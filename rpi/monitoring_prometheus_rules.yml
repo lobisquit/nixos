@@ -83,12 +83,6 @@ groups:
         expr: systemd:list{state="failed"}
 
       - alert: systemd:any:failed
-        expr: systemd:is_failed{name!="podcasts_ilpost.service"} == 1
+        expr: systemd:is_failed == 1
         annotations:
           summary: "[{{ $labels.job }}] SystemD unit {{ $labels.name }} has failed"
-
-      # special rule for a service that has to fail twice to trigger the error
-      - alert: systemd:podcasts_ilpost:failed
-        expr: changes(systemd:is_failed{name="podcasts_ilpost.service"}[60m]) >= 2
-        annotations:
-          summary: "[{{ $labels.job }}] SystemD unit {{ $labels.name }} has failed twice"
