@@ -111,11 +111,11 @@ if __name__ == '__main__':
 
                 print('Sending recording to chats', flush=True)
 
-                with open(Path(env('TMP_PATH')) / 'combined.mp4', 'rb') as video:
-                    chats = env('TELEGRAM_CHATS').strip().split(',')
-                    token = env('TELEGRAM_TOKEN').strip()
+                chats = env('TELEGRAM_CHATS').strip().split(',')
+                token = env('TELEGRAM_TOKEN').strip()
 
-                    for chat_id in chats:
+                for chat_id in chats:
+                    with open(Path(env('TMP_PATH')) / 'combined.mp4', 'rb') as video:
                         requests.post(
                             url=f'https://api.telegram.org/bot{token}/sendVideo',
                             data={'chat_id': chat_id},
