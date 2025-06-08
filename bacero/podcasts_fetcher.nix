@@ -1,0 +1,1 @@
+../shared/podcasts_fetcher.nix

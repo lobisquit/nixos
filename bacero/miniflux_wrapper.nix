@@ -1,0 +1,1 @@
+../shared/miniflux_wrapper.nix
