@@ -58,6 +58,7 @@ in
       config = {
         LISTEN_ADDR = "127.0.0.1:" + toString cfg.internalPort;
         BASE_URL = "https://" + cfg.baseUrl;
+        CLEANUP_REMOVE_SESSIONS_DAYS = "180";
       };
       adminCredentialsFile = secrets.miniflux_admin_credentials.path;
     };
