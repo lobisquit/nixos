@@ -23,7 +23,7 @@
       gnumake
       audacious
       sops
-      transmission_4-gtk
+      popcorntime
       unison
       kicad-small
       nmon
