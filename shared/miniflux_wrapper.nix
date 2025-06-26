@@ -19,7 +19,7 @@ in
 
     baseUrl = mkOption {
       type = types.str;
-      default = "https://news.lovisotto.it";
+      default = "news.lovisotto.it";
     };
 
     internalPort = mkOption {
@@ -57,13 +57,13 @@ in
       enable = true;
       config = {
         LISTEN_ADDR = "127.0.0.1:" + toString cfg.internalPort;
-        BASE_URL = cfg.baseUrl;
+        BASE_URL = "https://" + cfg.baseUrl;
       };
       adminCredentialsFile = secrets.miniflux_admin_credentials.path;
     };
 
     services.nginx_wrapper.enable = true;
-    services.nginx.virtualHosts."news.lovisotto.it" = {
+    services.nginx.virtualHosts."${cfg.baseUrl}" = {
       enableACME = true;
       forceSSL = true;
       locations."/" = {
