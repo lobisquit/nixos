@@ -51,6 +51,7 @@ if __name__ == '__main__':
                 audio_if = env('AUDIO_INTERFACE')
 
                 print('Started recording', flush=True)
+                subprocess.run(['amixer', 'set', 'Capture', 'cap'])
                 subprocess.run(['amixer', '-M', 'set', 'Capture', '15%'])
 
                 audio_process = subprocess.Popen([
