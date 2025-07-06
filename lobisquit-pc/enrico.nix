@@ -141,6 +141,13 @@
           identityFile = "/home/enrico/.ssh/raspberrypi";
           identitiesOnly = true;
         };
+
+        root_bacero = {
+          hostname = "bacero.home.lovisotto.it";
+          user = "root";
+          identityFile = "/home/enrico/.ssh/bacero";
+          identitiesOnly = true;
+        };
       };
     };
   };

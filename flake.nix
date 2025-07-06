@@ -42,6 +42,14 @@
             ];
           };
 
+          bacero = nixpkgs_stable.lib.nixosSystem {
+            specialArgs = {inherit inputs outputs;};
+            modules = [
+              ./bacero/configuration.nix
+              sops-nix_stable.nixosModules.sops
+            ];
+          };
+
           rpi = nixpkgs_stable.lib.nixosSystem {
             specialArgs = {inherit inputs outputs;};
             system = "aarch64-linux";

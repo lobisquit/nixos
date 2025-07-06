@@ -48,6 +48,11 @@
      openFirewall = true;
   };
 
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsHxNkEZo0CU1LCrqXfrMJ1rQshWtQCcp5XewttcLe2 enrico@lobisquit-minipc"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJe9tAxZdwMpXBEZNnzJWjqLOHSJz5/VRUYawVu6MzAl JuiceSSH"
+  ];
+
   networking.firewall.enable = true;
 
   system.stateVersion = "25.05";
