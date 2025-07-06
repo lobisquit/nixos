@@ -21,7 +21,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  services.logind.extraConfig = "HandleLidSwitch=ignore";
+  services.logind.lidSwitch = "ignore";
+  services.logind.lidSwitchDocked = "ignore";
+  services.logind.lidSwitchExternalPower = "ignore";
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
