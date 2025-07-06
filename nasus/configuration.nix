@@ -10,7 +10,6 @@
       ./backupper.nix
       ./filebrowser_wrapper.nix
       ./miniflux_wrapper.nix
-      ./doorman.nix
       ./monitoring.nix
       ./transmission_wrapper.nix
       ./samba_wrapper.nix
@@ -84,10 +83,6 @@
   };
 
   services.monitoring.enable = true;
-
-  services.doorman = {
-    enable = true;
-  };
 
   services.backlight_off.enable = true;
 

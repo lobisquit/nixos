@@ -4,6 +4,7 @@
   imports =
     [
       ./hardware-configuration.nix
+      ./doorman.nix
       ./monitoring.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
@@ -71,4 +72,6 @@
   services.miniflux_wrapper.enable = true;
 
   services.backupper.enable = true;
+
+  services.doorman.enable = true;
 }
