@@ -28,6 +28,8 @@
       kicad-small
       nmon
       tor-browser-bundle-bin
+      vlc
+      prusa-slicer
     ];
   };
 

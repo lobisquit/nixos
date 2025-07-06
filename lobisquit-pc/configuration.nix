@@ -29,7 +29,6 @@
     wireguard-tools
     acl
     htop
-    vlc
   ];
 
   home-manager = {
