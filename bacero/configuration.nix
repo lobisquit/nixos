@@ -3,6 +3,7 @@
 {
   imports =
     [
+      ./backlight_off.nix
       ./hardware-configuration.nix
       ./doorman.nix
       ./monitoring.nix
@@ -68,6 +69,8 @@
     podcastDir = "/mnt/storage_drive/podcasts";
     protectedPaths = [];
   };
+
+  services.backlight_off.enable = true;
 
   services.miniflux_wrapper.enable = true;
 
