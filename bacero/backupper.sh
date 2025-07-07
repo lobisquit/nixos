@@ -12,7 +12,7 @@ if [ ! -z "$MINIFLUX_BACKUP_ENABLED" ]; then
     # and the OPML list of feeds, for easy imports to new apps
     restic backup \
 	   --tag "miniflux" \
-	   --host "rpi" \
+	   --host "bacero" \
 	   --verbose \
 	   "$MINIFLUX_BACKUP_FOLDER"
 

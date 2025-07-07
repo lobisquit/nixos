@@ -64,17 +64,17 @@ groups:
       - record: systemd:is_active
         expr: systemd:list{state="active"}
 
-      - alert: systemd:rpi:nginx:not_active
+      - alert: systemd:bacero:nginx:not_active
         expr: |
-          absent(systemd:is_active{job="rpi", name="nginx.service"}) or
-          systemd:is_active{job="rpi", name="nginx.service"} == 0
+          absent(systemd:is_active{job="bacero", name="nginx.service"}) or
+          systemd:is_active{job="bacero", name="nginx.service"} == 0
         annotations:
           summary: "[{{ $labels.job }}] nginx is down"
 
-      - alert: systemd:rpi:sshd:not_active
+      - alert: systemd:bacero:sshd:not_active
         expr: |
-          absent(systemd:is_active{job="rpi", name="sshd.service"}) or
-          systemd:is_active{job="rpi", name="sshd.service"} == 0
+          absent(systemd:is_active{job="bacero", name="sshd.service"}) or
+          systemd:is_active{job="bacero", name="sshd.service"} == 0
         annotations:
           summary: "[{{ $labels.job }}] SSH daemon is not running"
 
