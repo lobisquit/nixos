@@ -59,7 +59,8 @@ with lib;
     };
 
     systemd.tmpfiles.rules = [
-      "d ${config.users.users.backupper.home + ".cache/restic"} 0750 ${backup_user} ${backup_group} -"
+      "d ${config.users.users.backupper.home + ".cache/"} 0750 ${backup_user} ${backup_group} -"
+      "d ${config.users.users.backupper.home + ".cache/restic/"} 0750 ${backup_user} ${backup_group} -"
     ];
 
     systemd.services.backup_remote = {
