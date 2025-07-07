@@ -85,6 +85,7 @@ in
 
     systemd.services.miniflux_backup_admin_opml = {
       description = "Backup the OPML for the admin user of miniflux";
+      # and restore with psql -d miniflux < postgres_miniflux.sql
 
       serviceConfig = {
         Type = "oneshot";
