@@ -78,6 +78,14 @@ groups:
         annotations:
           summary: "[{{ $labels.job }}] SSH daemon is not running"
 
+      - alert: systemd:bacero:doorman:not_active
+        expr: |
+          absent(systemd:is_active{job="bacero", name="doorman.service"}) or
+          systemd:is_active{job="bacero", name="doorman.service"} == 0
+        for: 10m
+        annotations:
+          summary: "[{{ $labels.job }}] doorman is down"
+
       # services that fail
       - record: systemd:is_failed
         expr: systemd:list{state="failed"}
