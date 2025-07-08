@@ -29,6 +29,7 @@
       nmon
       tor-browser-bundle-bin
       vlc
+      freecad
       prusa-slicer
     ];
   };
