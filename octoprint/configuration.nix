@@ -42,16 +42,6 @@
 
   services.monitoring.enable = true;
 
-  # services.podcasts_fetcher = {
-  #   enable = true;
-  #   podcastDir = "/mnt/storage_drive/podcasts";
-  #   protectedPaths = [];
-  # };
-
-  # services.miniflux_wrapper.enable = true;
-
-  # services.backupper.enable = true;
-
   sops.secrets.wifi_password = {
     mode = "0400";
   };
@@ -63,4 +53,6 @@
       "SuchReliableMuchControl".pskRaw = "ext:home";
     };
   };
+
+  services.octoprint.enable = true;
 }
