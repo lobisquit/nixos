@@ -136,8 +136,8 @@
           identitiesOnly = true;
         };
 
-        root_rpi = {
-          hostname = "rpi.home.lovisotto.it";
+        root_octoprint = {
+          hostname = "octoprint.home.lovisotto.it";
           user = "root";
           identityFile = "/home/enrico/.ssh/raspberrypi";
           identitiesOnly = true;

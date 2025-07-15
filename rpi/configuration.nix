@@ -5,9 +5,6 @@
     [
       ./hardware-configuration.nix
       ./monitoring.nix
-      ./podcasts_fetcher.nix
-      ./miniflux_wrapper.nix
-      ./backupper.nix
     ];
 
   boot.loader.grub.enable = false;
@@ -18,7 +15,7 @@
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
-  networking.hostName = "rpi";
+  networking.hostName = "octoprint";
 
   time.timeZone = "Europe/Rome";
 
@@ -38,20 +35,32 @@
 
   networking.firewall.enable = true;
 
-  system.stateVersion = "25.05";
+  system.stateVersion = "25.11";
 
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/root/.config/sops/age/keys.txt";
 
   services.monitoring.enable = true;
 
-  services.podcasts_fetcher = {
-    enable = true;
-    podcastDir = "/mnt/storage_drive/podcasts";
-    protectedPaths = [];
+  # services.podcasts_fetcher = {
+  #   enable = true;
+  #   podcastDir = "/mnt/storage_drive/podcasts";
+  #   protectedPaths = [];
+  # };
+
+  # services.miniflux_wrapper.enable = true;
+
+  # services.backupper.enable = true;
+
+  sops.secrets.wifi_password = {
+    mode = "0400";
   };
 
-  services.miniflux_wrapper.enable = true;
-
-  services.backupper.enable = true;
+  networking.wireless = {
+    enable = true;
+    secretsFile = config.sops.secrets.wifi_password.path;
+    networks = {
+      "SuchReliableMuchControl".pskRaw = "ext:home";
+    };
+  };
 }

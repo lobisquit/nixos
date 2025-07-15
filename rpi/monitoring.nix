@@ -91,42 +91,5 @@ in
         environmentFile = secrets.alertmanager_credentials.path;
       };
     };
-
-    users.groups.healthchecks_io = {};
-    users.users.healthchecks_io = {
-      createHome = false;
-      isSystemUser = true;
-      group = config.users.groups.healthchecks_io.name;
-    };
-
-    sops.secrets.healthchecks_io_environment = {
-      mode = "0400";
-      owner = config.users.users.healthchecks_io.name;
-      group = config.users.users.healthchecks_io.group;
-    };
-
-    systemd.services.healthchecks_io = {
-      enable = true;
-      description = "Send alive message to healthchecks.io";
-
-      path = with pkgs; [ curl ];
-
-      script = "curl -fsS -m 10 --retry 5 https://hc-ping.com/$HEALTHCHECKS_IO_CODE";
-      serviceConfig = {
-        User = config.users.users.healthchecks_io.name;
-        EnvironmentFile = secrets.healthchecks_io_environment.path;
-
-        TemporaryFileSystem = "/";
-        BindReadOnlyPaths = [
-          "/etc/resolv.conf"
-          "/etc/ssl/certs/ca-certificates.crt"
-          "/nix/store"
-        ];
-      };
-
-      startAt = "*:0/30";
-    };
-
-    systemd.timers.healthchecks_io.timerConfig.RandomizedDelaySec = "10m";
   };
 }
