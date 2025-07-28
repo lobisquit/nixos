@@ -118,7 +118,8 @@ class IlPostScraper:
         self.get_when_ready((By.ID, "user_pass")).send_keys(self.password)
         self.click_when_ready((By.ID, "wp-submit"))
 
-        # reject cookies
+        # reject cookies (twice)
+        self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
         self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
 
         self.logged_in = True
