@@ -1,5 +1,8 @@
 { config, lib, pkgs, ... }:
 
+let
+  mjpg-port = 5050;
+in
 {
   imports =
     [
@@ -54,5 +57,20 @@
     };
   };
 
-  services.octoprint.enable = true;
+  services.octoprint = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  users.users."${config.services.octoprint.user}".extraGroups = ["video"];
+
+  services.mjpg-streamer = {
+    enable = true;
+    # https://github.com/jacksonliam/mjpg-streamer/blob/master/mjpg-streamer-experimental/plugins/input_uvc/README.md
+    inputPlugin = "input_uvc.so --fps 1 -timeout 120";
+    outputPlugin = "output_http.so --www @www@ --nocommands --port ${toString mjpg-port}";
+  };
+
+  networking.firewall.allowedTCPPorts = [mjpg-port];
+  networking.firewall.allowedUDPPorts = [mjpg-port];
 }
