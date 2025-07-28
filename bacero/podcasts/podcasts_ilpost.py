@@ -83,8 +83,10 @@ class IlPostScraper:
         )
 
         options = webdriver.FirefoxOptions()
-        options.add_argument("--headless")
         options.binary_location = self.firefox_path
+
+        if not os.environ.get('DEBUG', None):
+            options.add_argument("--headless")
 
         self.driver = webdriver.Firefox(options=options,
                                         service=service)
