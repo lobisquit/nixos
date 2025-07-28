@@ -17,7 +17,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 log_level = os.environ.get('LOG_LEVEL', log.INFO)
 log.basicConfig(level=log_level,
@@ -109,6 +109,13 @@ class IlPostScraper:
         elem = self.wait.until(EC.presence_of_element_located((query)))
         return elem
 
+    def is_present(self, query):
+        try:
+            element = self.driver.find_element(*query)
+            return True
+        except NoSuchElementException:
+            return False
+
     def login(self):
         log.info("Started login")
         login_url = 'https://www.ilpost.it/wp-login.php'
@@ -118,9 +125,9 @@ class IlPostScraper:
         self.get_when_ready((By.ID, "user_pass")).send_keys(self.password)
         self.click_when_ready((By.ID, "wp-submit"))
 
-        # reject cookies (twice)
-        self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
-        self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
+        # reject cookies the number of times needed
+        while self.is_present((By.CLASS_NAME, "iubenda-cs-reject-btn")):
+            self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
 
         self.logged_in = True
         log.info("Ended login")
