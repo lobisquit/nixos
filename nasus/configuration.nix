@@ -8,14 +8,11 @@
       ./telegram_reminder.nix
       ./backlight_off.nix
       ./backupper.nix
-      ./filebrowser_wrapper.nix
-      ./miniflux_wrapper.nix
       ./monitoring.nix
       ./transmission_wrapper.nix
       ./samba_wrapper.nix
       ./mail_downloader.nix
       ./cal_card_downloader.nix
-      ./podcasts_fetcher.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -77,13 +74,6 @@
 
   services.telegram_reminder.enable = true;
 
-  services.miniflux_wrapper.enable = false;
-
-  services.filebrowser_wrapper = {
-    enable = false;
-    dataDir = config.services.sftpd_storage.data_directory;
-  };
-
   services.monitoring.enable = true;
 
   services.backlight_off.enable = true;
@@ -100,14 +90,5 @@
   services.cal_card_downloader = {
     enable = true;
     davDir = "${config.services.sftpd_storage.data_directory}/Documenti";
-  };
-
-  services.podcasts_fetcher = {
-    enable = false;
-    podcastDir = "/mnt/storage_drive/podcasts";
-    protectedPaths = [
-      config.services.sftpd_storage.data_directory
-      config.services.backupper.hdd_mountpoint
-    ];
   };
 }
