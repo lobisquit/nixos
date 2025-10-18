@@ -38,8 +38,8 @@ in
   };
 
   config = mkIf cfg.enable {
-    hardware.pulseaudio.enable = true;
-    hardware.pulseaudio.systemWide = true;
+    services.pulseaudio.enable = true;
+    services.pulseaudio.systemWide = true;
 
     users.groups.doorman = {};
     users.users.doorman = {

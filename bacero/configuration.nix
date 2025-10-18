@@ -65,7 +65,7 @@
   services.monitoring.enable = true;
 
   # duplicate with doorman if enabled
-  hardware.pulseaudio.enable = true;
+  services.pulseaudio.enable = true;
   users.extraUsers.root.extraGroups = [ "audio" ];
 
   services.podcasts_fetcher = {
