@@ -6,6 +6,13 @@ let
   cfg = config.services.podcasts_fetcher;
   secrets = config.sops.secrets;
 
+  ilpost_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
+    ps.selenium
+    ps.feedparser
+    ps.pulsectl
+    ps.feedgen
+  ]);
+
   base_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
     ps.feedparser
     ps.feedgen
@@ -54,10 +61,70 @@ in
       "d ${config.users.users.podcasts_fetcher.home}.cache 0750 podcasts_fetcher podcasts_fetcher -"
     ];
 
+    sops.secrets.podcasts_fetcher_ilpost_credentials = {
+      mode = "0400";
+      owner = config.users.users.podcasts_fetcher.name;
+      group = config.users.users.podcasts_fetcher.group;
+    };
+
+    sops.secrets.podcasts_fetcher_ilpost_configuration = {
+      mode = "0400";
+      owner = config.users.users.podcasts_fetcher.name;
+      group = config.users.users.podcasts_fetcher.group;
+    };
+
     sops.secrets.podcasts_fetcher_nginx_rss_credentials = {
       mode = "0400";
       owner = config.services.nginx.user;
       group = config.services.nginx.group;
+    };
+
+    systemd.services.podcasts_ilpost = {
+      description = "Download the latest podcasts from the RSS feeds";
+
+      after = [ "network.target" ];
+      serviceConfig = {
+        User = config.users.users.podcasts_fetcher.name;
+        Group = config.users.users.podcasts_fetcher.group;
+        Type = "oneshot";
+        EnvironmentFile = secrets.podcasts_fetcher_ilpost_credentials.path;
+
+        PrivateTmp = true;
+        InaccessiblePaths = cfg.protectedPaths ++ [
+          "/home"
+          "/root"
+          "/boot"
+        ];
+      };
+
+      path = with pkgs; [
+        ilpost_pythonEnv
+        ffmpeg
+        pulseaudio
+        firefox
+        geckodriver
+        which
+      ];
+
+      script = ''
+        set -e
+
+        export PYTHONPATH=$(${ilpost_pythonEnv}/bin/python -m site --user-site)
+        export FIREFOX=$(which firefox)
+        export GECKODRIVER=$(which geckodriver)
+        export BASE_URL=${cfg.baseUrl}
+
+        cd ${cfg.podcastDir}
+        python ${./podcasts/podcasts_ilpost.py} "${secrets.podcasts_fetcher_ilpost_configuration.path}"
+      '';
+
+      preStop = ''
+        set -e
+        # remove files older than 30 days
+        find ${cfg.podcastDir} -mtime +30 -type f -delete
+      '';
+
+      startAt = "*:00/30";
     };
 
     sops.secrets.podcasts_fetcher_youtube_configuration = {
