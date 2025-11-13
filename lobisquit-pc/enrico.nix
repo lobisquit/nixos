@@ -31,6 +31,7 @@
       vlc
       freecad
       prusa-slicer
+      isort
     ];
   };
 
