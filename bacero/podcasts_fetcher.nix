@@ -9,8 +9,8 @@ let
   ilpost_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
     ps.selenium
     ps.feedparser
-    ps.pulsectl
     ps.feedgen
+    ps.requests
   ]);
 
   base_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
@@ -44,16 +44,12 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.pulseaudio.enable = true;
-    services.pulseaudio.systemWide = true;
-
     users.groups.podcasts_fetcher = {};
     users.users.podcasts_fetcher = {
       createHome = true;
       home = "/var/lib/podcasts_fetcher/";
       isSystemUser = true;
       group = config.users.groups.podcasts_fetcher.name;
-      extraGroups = ["pulse-access"];
     };
 
     systemd.tmpfiles.rules = [
@@ -100,7 +96,6 @@ in
       path = with pkgs; [
         ilpost_pythonEnv
         ffmpeg
-        pulseaudio
         firefox
         geckodriver
         which
