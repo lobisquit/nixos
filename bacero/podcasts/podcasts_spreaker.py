@@ -1,12 +1,13 @@
-import feedparser
-import subprocess
-import os
-from pathlib import Path
-import sys
-from feedgen.feed import FeedGenerator
-import logging as log
-import urllib.request
 import json
+import logging as log
+import os
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+import feedparser
+from feedgen.feed import FeedGenerator
 
 log_level = os.environ.get('LOG_LEVEL', log.INFO)
 log.basicConfig(level=log_level,
