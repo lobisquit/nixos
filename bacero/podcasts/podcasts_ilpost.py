@@ -8,16 +8,16 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import feedparser
-import pulsectl
+import requests
 from feedgen.feed import FeedGenerator
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 log_level = os.environ.get('LOG_LEVEL', log.INFO)
 log.basicConfig(level=log_level,
@@ -25,46 +25,8 @@ log.basicConfig(level=log_level,
                 handlers=[log.StreamHandler()])
 
 
-@contextmanager
-def null_sink(sink_name):
-    with pulsectl.Pulse('ilpost_scraper') as pulse:
-        sink_id = None
-        current_sinks = {s.name: s for s in pulse.sink_list()}
-
-        if sink_name not in current_sinks:
-            sink_id = pulse.module_load('module-null-sink', f'sink_name={sink_name}')
-        else:
-            log.warning(f"PA sink {sink_name} already exists")
-            sink_id = current_sinks[sink_name].owner_module
-
-        try:
-            log.info("Sink enabled")
-            yield sink_name
-        finally:
-            pulse.module_unload(sink_id)
-            log.info("Sink unloaded")
-
-
-@contextmanager
-def recorder(audio_interface, episode_path):
-    Path(episode_path).parent.mkdir(parents=True, exist_ok=True)
-    recorder = subprocess.Popen([
-        'ffmpeg', '-hide_banner', '-loglevel', 'error', '-f', 'pulse',
-        '-i', f'{audio_interface}.monitor', episode_path
-    ])
-
-    try:
-        log.info("Started recording")
-        yield recorder
-    finally:
-        recorder.terminate()
-        recorder.wait()
-        log.info("Stopped recording")
-
-
 class IlPostScraper:
-    def __init__(self, sink_name, firefox_path, geckdriver_path, username, password, timeout_s=10):
-        self.sink_name = sink_name
+    def __init__(self, firefox_path, geckdriver_path, username, password, timeout_s=10):
         self.timeout_s = timeout_s
         self.firefox_path = firefox_path
         self.geckdriver_path = geckdriver_path
@@ -74,8 +36,6 @@ class IlPostScraper:
         self.logged_in = False
 
     def __enter__(self):
-        os.environ['PULSE_SINK'] = self.sink_name
-
         service = Service(
             executable_path=self.geckdriver_path,
             # log_output="/tmp/selenium_browser.log",
@@ -109,12 +69,21 @@ class IlPostScraper:
         elem = self.wait.until(EC.presence_of_element_located((query)))
         return elem
 
+    def wait_for_correct_current_url(self, desired_url):
+        self.wait.until(
+            lambda driver: driver.current_url == desired_url
+        )
+
     def is_present(self, query):
         try:
             element = self.driver.find_element(*query)
             return True
         except NoSuchElementException:
             return False
+
+    def reject_cookies_if_any(self):
+        while self.is_present((By.CLASS_NAME, "iubenda-cs-reject-btn")):
+            self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
 
     def login(self):
         log.info("Started login")
@@ -123,11 +92,11 @@ class IlPostScraper:
 
         self.get_when_ready((By.ID, "user_login")).send_keys(self.username)
         self.get_when_ready((By.ID, "user_pass")).send_keys(self.password)
+
+        self.reject_cookies_if_any() # could spawn at any time
         self.click_when_ready((By.ID, "wp-submit"))
 
-        # reject cookies the number of times needed
-        while self.is_present((By.CLASS_NAME, "iubenda-cs-reject-btn")):
-            self.click_when_ready((By.CLASS_NAME, "iubenda-cs-reject-btn"))
+        self.wait_for_correct_current_url("https://abbonati.ilpost.it/mio-account/")
 
         self.logged_in = True
         log.info("Ended login")
@@ -139,38 +108,27 @@ class IlPostScraper:
         if self.driver.current_url != episode_url:
             self.driver.get(episode_url)
 
-        progress_bar = self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//progress")))
+        self.reject_cookies_if_any() # could spawn at any time
 
-        log.info("Waiting for progress bar size to stabilize")
-        initial_size = progress_bar.size
-        self.wait.until(lambda d: progress_bar.size == initial_size)
-        log.info("Progress bar size stabilized {} == {}".format(
-                 initial_size['width'],
-                 progress_bar.size['width']))
+        # get audio element mp3 url
+        audio_url = self.get_when_ready((By.TAG_NAME, "audio")) \
+                        .get_attribute("src")
 
-        ActionChains(self.driver) \
-            .move_to_element(progress_bar) \
-            .move_by_offset(-progress_bar.size['width'] / 2, 0) \
-            .click() \
-            .perform()
+        # download to episode path
+        log.info("Downloading episode")
+        response = requests.get(audio_url)
+        log.info("Episode downloaded")
 
-        with recorder(sink_name, episode_path):
-            log.info("Waiting for the play button")
-            self.click_when_ready((By.CSS_SELECTOR, '[aria-label=Play]'))
-            log.info("Play button clicked")
+        if response.ok:
+            Path(episode_path).parent.mkdir(parents=True,
+                                            exist_ok=True)
 
-            while float(progress_bar.get_attribute('value')) < \
-                  float(progress_bar.get_attribute('max')):
-                progress_value = float(progress_bar.get_attribute('value'))
-                max_value = float(progress_bar.get_attribute('max'))
+            with open(episode_path, "wb") as file:
+                file.write(response.content)
+        else:
+            raise ValueError(
+                f"Failed to download the file. Status code: {response.status_code}")
 
-                # print current time at the beginning and at the end of the recording
-                delta = 10
-                if progress_value < delta or progress_value > max_value - delta:
-                    log.info(f'{progress_value} {max_value}')
-
-                time.sleep(1)
 
     def get_description(self, episode_url):
         if not self.logged_in:
@@ -202,9 +160,7 @@ if __name__ == '__main__':
     username = os.environ['USERNAME']
     password = os.environ['PASSWORD']
 
-    with null_sink("virtualsink") as sink_name, \
-         IlPostScraper(sink_name,
-                       os.environ['FIREFOX'],
+    with IlPostScraper(os.environ['FIREFOX'],
                        os.environ['GECKODRIVER'],
                        os.environ['USERNAME'],
                        os.environ['PASSWORD']) as scraper:
