@@ -24,6 +24,7 @@ test-self:
 clean-self:
 	sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations +2
 	sudo nix-env --profile /nix/var/nix/profiles/system --list-generations
+	nix-shell -p home-manager --command 'home-manager expire-generations "-30 days"'
 	sudo nix-store --gc
 	sudo nixos-rebuild boot --flake '.#'
 
