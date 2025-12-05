@@ -71,7 +71,9 @@ class IlPostScraper:
 
     def wait_for_correct_current_url(self, desired_url):
         self.wait.until(
-            lambda driver: driver.current_url == desired_url
+            lambda driver: \
+            driver.current_url == desired_url or \
+            driver.current_url == desired_url + "/"
         )
 
     def is_present(self, query):
@@ -96,7 +98,7 @@ class IlPostScraper:
         self.reject_cookies_if_any() # could spawn at any time
         self.click_when_ready((By.ID, "wp-submit"))
 
-        self.wait_for_correct_current_url("https://abbonati.ilpost.it/mio-account/")
+        self.wait_for_correct_current_url("https://abbonati.ilpost.it/mio-account")
 
         self.logged_in = True
         log.info("Ended login")
