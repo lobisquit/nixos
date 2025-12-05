@@ -92,17 +92,13 @@
     davDir = "${config.services.sftpd_storage.data_directory}/Documenti";
   };
 
-  services.gonic = {
+  services.navidrome = {
     enable = true;
     settings = {
-      listen-addr = "127.0.0.1:4747";
-
-      music-path = [
-        "${config.services.sftpd_storage.data_directory}/Musica"
-      ];
-
-      playlists-path = "/mnt/storage_drive/playlists";
-      podcast-path = "/mnt/storage_drive/podcasts";
+      Address = "127.0.0.1";
+      Port = 4533;
+      MusicFolder = "/music";
+      EnableSharing = true;
     };
   };
 }
