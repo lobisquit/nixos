@@ -27,7 +27,7 @@
       unison
       kicad-small
       nmon
-      tor-browser-bundle-bin
+      tor-browser
       vlc
       freecad
       prusa-slicer
