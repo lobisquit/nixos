@@ -38,9 +38,11 @@
   programs = {
     git = {
       enable = true;
-      userName = "Enrico Lovisotto";
-      userEmail = "dev@lovisotto.it";
-      extraConfig = {
+      settings = {
+        user = {
+          name = "Enrico Lovisotto";
+          email = "dev@lovisotto.it";
+        };
         init.defaultBranch = "main";
       };
     };
