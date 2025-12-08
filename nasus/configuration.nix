@@ -94,10 +94,12 @@
 
   services.navidrome = {
     enable = true;
+    openFirewall = true;
+
     settings = {
-      Address = "127.0.0.1";
+      Address = "0.0.0.0";
       Port = 4533;
-      MusicFolder = "/music";
+      MusicFolder = "${config.services.sftpd_storage.data_directory}/Musica";
       EnableSharing = true;
     };
   };
