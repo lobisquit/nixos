@@ -118,6 +118,14 @@
           identitiesOnly = true;
         };
 
+        root_minipc = {
+          hostname = "10.63.16.102";
+          user = "root";
+          identityFile = "/home/enrico/.ssh/minipc";
+          port = 22;
+          identitiesOnly = true;
+        };
+
         "git.sr.ht" = {
           hostname = "git.sr.ht";
           user = "git";
