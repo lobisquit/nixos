@@ -50,6 +50,14 @@
             ];
           };
 
+          minipc = nixpkgs_stable.lib.nixosSystem {
+            specialArgs = {inherit inputs outputs;};
+            modules = [
+              ./minipc/configuration.nix
+              sops-nix_stable.nixosModules.sops
+            ];
+          };
+
           octoprint = nixpkgs_stable.lib.nixosSystem {
             specialArgs = {inherit inputs outputs;};
             system = "aarch64-linux";
