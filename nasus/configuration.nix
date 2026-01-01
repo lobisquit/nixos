@@ -95,6 +95,7 @@
   services.navidrome = {
     enable = true;
     openFirewall = true;
+    group = "storage";
 
     settings = {
       Address = "0.0.0.0";
