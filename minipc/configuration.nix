@@ -6,6 +6,8 @@
       ./hardware-configuration.nix
     ];
 
+  nix.settings.experimental-features = ["nix-command" "flakes"];
+
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
 
@@ -34,6 +36,7 @@
     packages = with pkgs; [
       firefox
       restic
+      (writeShellScriptBin "mount_encrypted" '' ${builtins.readFile ./mount_encrypted.sh} '')
     ];
   };
 
@@ -43,7 +46,16 @@
     sops
     tmux
     wireguard-tools
+    cryptsetup
   ];
+
+  services.xserver.videoDrivers = [ "modesetting" ];
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver
+    ];
+  };
 
   networking.firewall.enable = true;
 
