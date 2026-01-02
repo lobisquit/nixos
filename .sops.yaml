@@ -3,6 +3,7 @@ keys:
   - &nasus age1a9vpdqf3pzwqgvuws0x3ym20dmduhplp24pgf3jlwd6qma5sjfvsx9yvrz
   - &rpi age1q67ckc8fkd7cmadsx587mphv29tuaxwe9a97v3l525a3jdnsycjst3jwvv
   - &bacero age1lx80z5jdpasfka0a70pn3ydd3kf8agx6va2e2cluekn6ahvleq2qk0jmga
+  - &minipc age1urvr4xewunkrhxjh8cfrn8rag6reh87p35h8d7nfelw0k9hepslqvgcylu
 
 creation_rules:
   - path_regex: "[^/]+\\.(yaml|json|env|ini)$"
@@ -12,3 +13,4 @@ creation_rules:
         - *nasus
         - *rpi
         - *bacero
+        - *minipc

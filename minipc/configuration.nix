@@ -37,6 +37,7 @@
       firefox
       restic
       (writeShellScriptBin "mount_encrypted" '' ${builtins.readFile ./mount_encrypted.sh} '')
+      (writeShellScriptBin "fetch_local" '' ${builtins.readFile ./fetch_local.sh} '')
     ];
   };
 
@@ -61,6 +62,16 @@
 
   services.xserver.displayManager.lightdm.enable = true;
   services.xserver.desktopManager.lxqt.enable = true;
+
+  # restic secrets
+  sops.defaultSopsFile = ./secrets.yaml;
+  sops.age.keyFile = "/root/.config/sops/age/keys.txt";
+
+  sops.secrets.restic_local_configuration = {
+    mode = "0400";
+    owner = config.users.users.enrico.name;
+    group = config.users.users.enrico.group;
+  };
 
   system.stateVersion = "25.11";
 }
