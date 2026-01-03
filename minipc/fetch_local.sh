@@ -32,7 +32,7 @@ trap "umount $MOUNTPOINT" EXIT
 for tag_path in ${TAGS_FOLDER}/*/; do
     tag=$(basename "$tag_path")
 
-    local_folder="/home/enrico/Desktop/$MAPPER_NAME/$tag"
+    local_folder="/mnt/private_data/data/$tag"
     mkdir -p $local_folder
 
     backup_folder="$MOUNTPOINT/tags/$tag/latest/$DATA_PATH/$tag/"
