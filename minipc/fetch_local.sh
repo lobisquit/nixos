@@ -16,8 +16,7 @@ fi
 
 echo $PASSWORD_FILE
 
-UTILS_FOLDER=$DISK_PATH/home/restic-utils/Linux
-MOUNTPOINT=$UTILS_FOLDER/tmp
+MOUNTPOINT=/tmp/restic
 mkdir -p $MOUNTPOINT
 
 TAGS_FOLDER=$MOUNTPOINT/tags
