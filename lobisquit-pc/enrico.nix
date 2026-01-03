@@ -119,7 +119,7 @@
         };
 
         root_minipc = {
-          hostname = "10.69.53.102";
+          hostname = "10.63.16.102";
           user = "root";
           identityFile = "/home/enrico/.ssh/minipc";
           port = 22;
