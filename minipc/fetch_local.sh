@@ -29,9 +29,9 @@ done
 
 trap "umount $MOUNTPOINT" EXIT
 
-for tag_path in ${TAGS_FOLDER}/*/; do
-    tag=$(basename "$tag_path")
+tags="Documenti Immagini miniflux postgresql Video"
 
+for tag in $tags; do
     local_folder="/mnt/private_data/data/$tag"
     mkdir -p $local_folder
 
