@@ -6,14 +6,14 @@ let
   cfg = config.services.podcasts_fetcher;
   secrets = config.sops.secrets;
 
-  ilpost_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
+  ilpost_pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ps.selenium
     ps.feedparser
     ps.feedgen
     ps.requests
   ]);
 
-  base_pythonEnv = pkgs.python312.withPackages (ps: with ps; [
+  base_pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ps.feedparser
     ps.feedgen
   ]);

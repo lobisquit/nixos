@@ -10,12 +10,13 @@
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
       ./backupper.nix
+      ./beancount_bot.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  services.logind.extraConfig = "HandleLidSwitch=ignore";
+  services.logind.settings.Login.HandleLidSwitch = "ignore";
 
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
@@ -81,4 +82,5 @@
   services.backupper.enable = true;
 
   services.doorman.enable = true;
+  services.beancount_bot.enable = true;
 }

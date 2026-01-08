@@ -7,7 +7,7 @@ let
   secrets = config.sops.secrets;
   storage_cfg = config.services.sftpd_storage;
 
-  pythonEnv = pkgs.python312.withPackages (ps: with ps; [
+  pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ps.pyserial
     ps.requests
   ]);
