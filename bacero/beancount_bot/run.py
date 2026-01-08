@@ -16,9 +16,9 @@ from aiogram.types import (KeyboardButton, Message, ReplyKeyboardMarkup,
                            ReplyKeyboardRemove)
 from aiogram.types.bot_command import BotCommand
 
-from .local_db import (archive_all_transactions, delete_last_transaction,
-                       get_last_transaction, get_most_frequent_by_field,
-                       get_transactions, init_db, insert_transaction)
+from local_db import (archive_all_transactions, delete_last_transaction,
+                      get_last_transaction, get_most_frequent_by_field,
+                      get_transactions, init_db, insert_transaction)
 
 DB_HOST = '/run/postgresql'
 DB_NAME = 'beancount_bot'

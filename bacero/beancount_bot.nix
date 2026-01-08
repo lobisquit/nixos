@@ -68,7 +68,7 @@ in
       ];
 
       script = ''
-        python ${./beancount_bot/run.py}
+        python ${./beancount_bot}/run.py
       '';
     };
 
