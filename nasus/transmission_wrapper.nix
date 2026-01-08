@@ -55,6 +55,7 @@ in
       credentialsFile = secrets.transmission_credentials.path;
       openPeerPorts = true;
       home = cfg.home;
+      package = pkgs.transmission_4;
       settings = {
         incomplete-dir-enabled = false;
         rpc-bind-address = "0.0.0.0";
