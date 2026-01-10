@@ -62,6 +62,11 @@ def parse_amount(message_text, default_currency):
         return integer_part, cent_part, currency_part
 
 
+def parse_account_name(message_text):
+    removed_extra_spaces = re.sub(r'\s+', ' ', message_text.strip())
+    return removed_extra_spaces.replace(' ', ':')
+
+
 async def get_field_suggestions(user_id, field_id, n=12):
     common_fields = await get_most_frequent_by_field(user_id, field_id, n)
     last_entry = await get_last_transaction(user_id)
@@ -103,7 +108,7 @@ def db_transaction_to_beancount(db_trans):
     padded_destination_account = destination_account.ljust(account_max_len)
 
     lines = [
-        f'{insert_date} txn "{description}"',
+        f'{insert_date} * "{description}"',
         f'  {padded_source_account}  -{amount_integer}.{amount_cents:02} {currency}',
         f'  {padded_destination_account}',
     ]
@@ -192,7 +197,8 @@ async def description_setter(message: Message, state: FSMContext) -> None:
 
 @form_router.message(InsertionForm.description_set)
 async def source_account_setter(message: Message, state: FSMContext) -> None:
-    await state.update_data(source_account=message.text)
+    source_account = parse_account_name(message.text)
+    await state.update_data(source_account=source_account)
     await state.set_state(InsertionForm.source_set)
 
     markup = await get_field_suggestions(message.from_user.id, 'destination_account')
@@ -201,7 +207,8 @@ async def source_account_setter(message: Message, state: FSMContext) -> None:
 
 @form_router.message(InsertionForm.source_set)
 async def destination_account_setter(message: Message, state: FSMContext) -> None:
-    await state.update_data(destination_account=message.text)
+    destination_account = parse_account_name(message.text)
+    await state.update_data(destination_account=destination_account)
 
     insertion_form_data = await state.get_data()
     await state.clear()
