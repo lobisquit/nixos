@@ -56,7 +56,13 @@ def parse_amount(message_text, default_currency):
     groups = amount_pattern.match(message_text)
     if groups:
         integer_part = int(groups[1])
-        cent_part = int(groups[3] or '0')
+
+        cent_part_string = groups[3] or '00'
+        if len(cent_part_string) == 1:
+            # 13.8 means 13.80, not 13.08
+            cent_part_string += '0'
+
+        cent_part = int(cent_part_string or '0')
         currency_part = groups[5] or default_currency
 
         return integer_part, cent_part, currency_part
