@@ -80,8 +80,16 @@ async def get_field_suggestions(user_id, field_id, n=12):
     if last_entry and last_entry[field_id] not in common_fields:
         common_fields = [last_entry[field_id], *common_fields[:-1]]
 
+    buttons = (
+        KeyboardButton(text=label)
+        for label
+        in common_fields
+    )
+
+    # keyboard field is a matrix of button, where the external list
+    # contains the rows as sub-lists of buttons
     markup = ReplyKeyboardMarkup(
-        keyboard=[ [KeyboardButton(text=label) for label in common_fields] ],
+        keyboard=[ [b] for b in buttons ],
         resize_keyboard=True)
 
     return markup
