@@ -46,7 +46,9 @@ async def get_transactions(user_id, archived=False):
     transactions = await conn.fetch(f"""
         SELECT {', '.join(fields)} FROM transactions
         WHERE archived = {archived}
-          AND user_id = {user_id}""")
+          AND user_id = {user_id}
+        ORDER BY source_account, insert_time
+    """)
 
     return [dict(zip(fields, t)) for t in transactions]
 
