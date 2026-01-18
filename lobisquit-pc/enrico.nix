@@ -32,6 +32,7 @@
       freecad
       prusa-slicer
       isort
+      age
     ];
   };
 
