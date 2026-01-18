@@ -93,6 +93,7 @@
 
     ssh = {
       enable = true;
+      enableDefaultConfig = false;
 
       matchBlocks = {
         root_nasus = {
