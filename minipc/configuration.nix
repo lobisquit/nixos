@@ -36,6 +36,7 @@
     packages = with pkgs; [
       firefox
       restic
+      git
       (writeShellScriptBin "mount_encrypted" '' ${builtins.readFile ./mount_encrypted.sh} '')
       (writeShellScriptBin "fetch_local" '' ${builtins.readFile ./fetch_local.sh} '')
     ];
@@ -70,7 +71,7 @@
     wg-home-inner = {
       address = [ "192.168.77.6/24" ];
       dns = [ "192.168.77.1" ];
-      privateKeyFile = sops_secrets.wireguard_private_key.path;
+      privateKeyFile = config.sops.secrets.wireguard_private_key.path;
 
       peers = [
         {
