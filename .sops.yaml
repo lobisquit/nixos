@@ -1,16 +1,46 @@
 keys:
   - &lobisquit-pc age15tnsvgx3exv822du98vyhrs4u3wv046l3g8gv3ytf9072zv5pqyqd466wa
+  - &minipc-enrico age1vhcrmm28dz9d0nwekce3pwuz68hnremctx92r9saks5f9t4s44rq7d6fm7
+  - &padel1 age1pdf9j3rm4zdj2pzj9skhv5kyj3u74d80q9g2wmutyvq3ah00lctskhvct2
   - &nasus age1a9vpdqf3pzwqgvuws0x3ym20dmduhplp24pgf3jlwd6qma5sjfvsx9yvrz
   - &rpi age1q67ckc8fkd7cmadsx587mphv29tuaxwe9a97v3l525a3jdnsycjst3jwvv
   - &bacero age1lx80z5jdpasfka0a70pn3ydd3kf8agx6va2e2cluekn6ahvleq2qk0jmga
   - &minipc age1urvr4xewunkrhxjh8cfrn8rag6reh87p35h8d7nfelw0k9hepslqvgcylu
 
 creation_rules:
-  - path_regex: "[^/]+\\.(yaml|json|env|ini)$"
+  - path_regex: "lobisquit-pc/secrets.yaml"
     key_groups:
       - age:
         - *lobisquit-pc
+        - *minipc-enrico
+        - *padel1
+  - path_regex: "nasus/secrets.yaml"
+    key_groups:
+      - age:
+        - *lobisquit-pc
+        - *minipc-enrico
+        - *padel1
         - *nasus
-        - *rpi
+  - path_regex: "bacero/secrets.yaml"
+    key_groups:
+      - age:
+        - *lobisquit-pc
+        - *minipc-enrico
+        - *padel1
         - *bacero
+  - path_regex: "minipc/secrets.yaml"
+    key_groups:
+      - age:
+        - *lobisquit-pc
         - *minipc
+        - *padel1
+        - *minipc
+
+  # - path_regex: "[^/]+\\.(yaml|json|env|ini)$"
+  #   key_groups:
+  #     - age:
+  #       - *lobisquit-pc
+  #       - *nasus
+  #       - *rpi
+  #       - *bacero
+  #       - *minipc
