@@ -30,6 +30,13 @@
     };
   };
 
+  users.users.root = {
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKGzr85ksrPRy6QdGPKeHYEaCKNrICcs1b4PjG6pZ7KU enrico@lobisquit-pc"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOOMyUDptanESOLPDhQF2fnlilY7vyFvYUpGAJSJooFy Termux@padel1"
+    ];
+  };
+
   users.users.enrico = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
@@ -69,7 +76,7 @@
 
   networking.wg-quick.interfaces = {
     wg-home-inner = {
-      address = [ "192.168.77.6/24" ];
+      address = [ "192.168.77.3/24" ];
       dns = [ "192.168.77.1" ];
       privateKeyFile = config.sops.secrets.wireguard_private_key.path;
 
@@ -86,7 +93,7 @@
     };
 
     wg-home-full = {
-      address = [ "192.168.77.6/24" ];
+      address = [ "192.168.77.3/24" ];
       dns = [ "192.168.77.1" ];
       privateKeyFile = config.sops.secrets.wireguard_private_key.path;
 
