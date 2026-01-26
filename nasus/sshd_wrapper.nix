@@ -52,7 +52,7 @@ in
     users.users.root = {
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsHxNkEZo0CU1LCrqXfrMJ1rQshWtQCcp5XewttcLe2 enrico@lobisquit-minipc"
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJPHQvG3o1UdCWZ4N0iY1UyaKt0ANsbMUXluqCRIzxBp JuiceSSH@Padel1"
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINefIcTJLK0u5Mzbzj5QUqdz+QVTPCXcpicltw8ewf05 Termux@padel1"
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOCNCp4ek5dvMRBOOqDlmuH+lQ41Rk4jG2Mcm/tHdhkj Termius@tablet"
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINc+i2CAGsqJR1xSd1r8+R30MCQoyXDTVd+8ObJ+KjKP enrico@lobisquit-pc"
       ];

@@ -53,7 +53,7 @@
 
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsHxNkEZo0CU1LCrqXfrMJ1rQshWtQCcp5XewttcLe2 enrico@lobisquit-minipc"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJe9tAxZdwMpXBEZNnzJWjqLOHSJz5/VRUYawVu6MzAl JuiceSSH"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJxJVIy0OGLKIkzlb+V69iqwc+TY8xaY2NaSV4mjheB2 Termux@padel1"
   ];
 
   networking.firewall.enable = true;
