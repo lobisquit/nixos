@@ -15,7 +15,7 @@ case "$CMD" in
         SOPS_AGE_KEY_FILE="$KEY" sops decrypt --input-type yaml --output-type yaml --filename-override "${1:?}" /dev/stdin
         ;;
     clean)
-        sops encrypt --input-type binary --output-type binary --filename-override "${1:?}" /dev/stdin
+        sops encrypt --input-type yaml --output-type yaml --filename-override "${1:?}" /dev/stdin
         ;;
     textconv)
         cat "${1:?}" || true
