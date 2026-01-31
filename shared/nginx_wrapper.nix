@@ -12,12 +12,22 @@ in
         type = lib.types.bool;
         default = false;
       };
+
+      env_file = lib.mkOption {
+        type = lib.types.path;
+        default = false;
+      };
     };
   };
 
   config = mkIf cfg.enable {
     security.acme = {
-      defaults.email = "webmaster@lovisotto.it";
+      defaults = {
+        email = "webmaster@lovisotto.it";
+        server = "https://acme-api.actalis.com/acme/directory";
+        environmentFile = cfg.env_file;
+        extraLegoFlags = [ "--eab" ];
+      };
       acceptTerms = true;
     };
 

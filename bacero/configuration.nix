@@ -1,5 +1,8 @@
 { config, lib, pkgs, ... }:
 
+let
+  secrets = config.sops.secrets;
+in
 {
   imports =
     [
@@ -83,4 +86,12 @@
 
   services.doorman.enable = true;
   services.beancount_bot.enable = true;
+
+  sops.secrets.lego_acme_configuration = {
+    mode = "0400";
+    owner = "acme";
+    group = "acme";
+  };
+
+  services.nginx_wrapper.env_file = secrets.lego_acme_configuration.path;
 }
