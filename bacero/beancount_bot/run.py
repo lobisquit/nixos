@@ -117,12 +117,18 @@ def db_transaction_to_beancount(db_trans):
     destination_account = db_trans['destination_account']
     description = db_trans['description']
 
+    to_be_checked = ('!' in description) or (amount_integer > 10000)
+    if to_be_checked:
+        txn_symbol = '!'
+    else:
+        txn_symbol = '*'
+
     account_max_len = max(len(source_account), len(destination_account))
     padded_source_account = source_account.ljust(account_max_len)
     padded_destination_account = destination_account.ljust(account_max_len)
 
     lines = [
-        f'{insert_date} * "{description}"',
+        f'{insert_date} {txn_symbol} "{description}"',
         f'  {padded_source_account}  -{amount_integer}.{amount_cents:02} {currency}',
         f'  {padded_destination_account}',
     ]
