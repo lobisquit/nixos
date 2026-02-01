@@ -142,6 +142,13 @@
           identitiesOnly = true;
         };
 
+        "github.com" = {
+          hostname = "github.com";
+          user = "git";
+          identityFile = "/home/enrico/.ssh/github";
+          identitiesOnly = true;
+        };
+
         root_router = {
           hostname = "home.lovisotto.it";
           user = "root";
