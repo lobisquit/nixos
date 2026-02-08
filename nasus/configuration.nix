@@ -78,7 +78,11 @@
 
   services.backlight_off.enable = true;
 
-  services.transmission_wrapper.enable = true;
+  services.transmission_wrapper = {
+    enable = true;
+    fqdn = "transmission.home.lovisotto.it";
+    root_domain = "home.lovisotto.it";
+  };
 
   services.samba_wrapper.enable = true;
 
@@ -104,4 +108,12 @@
       EnableSharing = true;
     };
   };
+
+  sops.secrets.lego_acme_configuration = {
+    mode = "0400";
+    owner = "acme";
+    group = "acme";
+  };
+
+  services.nginx_wrapper.env_file = config.sops.secrets.lego_acme_configuration.path;
 }

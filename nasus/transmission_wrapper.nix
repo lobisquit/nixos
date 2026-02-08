@@ -14,6 +14,7 @@ in
   imports =
     [
       ./samba_wrapper.nix
+      ./nginx_wrapper.nix
     ];
 
   options = {
@@ -26,6 +27,16 @@ in
       internalPort = mkOption {
         type = types.int;
         default = 8035;
+      };
+
+      root_domain = mkOption {
+        type = types.str;
+        default = "domain";
+      };
+
+      fqdn = mkOption {
+        type = types.str;
+        default = "transmission.domain";
       };
 
       home = mkOption {
@@ -127,6 +138,34 @@ in
           "/nix/store"
           secrets.smbpasswd.path
         ];
+      };
+    };
+
+    services.nginx_wrapper.enable = true;
+    services.nginx.virtualHosts."${cfg.fqdn}" = {
+      enableACME = true;
+      forceSSL = true;
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString cfg.internalPort}";
+      };
+    };
+
+    sops.secrets.desec_token = {
+      mode = "0400";
+      owner = "acme";
+      group = "acme";
+    };
+
+    security.acme.certs = {
+      "${cfg.fqdn}" = {
+        domain = cfg.fqdn;
+        # extraDomainNames = [ cfg.fqdn ];
+        group = "nginx";
+        dnsProvider = "desec";
+        dnsResolver = "ns1.desec.io:53";
+        environmentFile = secrets.desec_token.path;
+        server = "https://acme-v02.api.letsencrypt.org/directory";
+        webroot = null;
       };
     };
 
