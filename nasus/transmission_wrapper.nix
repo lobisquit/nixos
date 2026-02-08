@@ -62,6 +62,7 @@ in
         rpc-whitelist-enabled = true;
         rpc-whitelist = "127.0.0.1,192.168.77.*,192.168.0.*";
         blocklist-enabled = true;
+        rpc-port = cfg.internalPort;
         blocklist-url = "https://raw.githubusercontent.com/Naunter/BT_BlockLists/master/bt_blocklists.gz";
         ratio-limit-enabled = true;
         ratio-limit = 3.0;
