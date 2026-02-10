@@ -29,11 +29,6 @@ in
         default = 8035;
       };
 
-      root_domain = mkOption {
-        type = types.str;
-        default = "domain";
-      };
-
       fqdn = mkOption {
         type = types.str;
         default = "transmission.domain";
@@ -159,7 +154,6 @@ in
     security.acme.certs = {
       "${cfg.fqdn}" = {
         domain = cfg.fqdn;
-        # extraDomainNames = [ cfg.fqdn ];
         group = "nginx";
         dnsProvider = "desec";
         dnsResolver = "ns1.desec.io:53";

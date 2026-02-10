@@ -9,6 +9,7 @@
       ./backlight_off.nix
       ./backupper.nix
       ./monitoring.nix
+      ./navidrome_wrapper.nix
       ./transmission_wrapper.nix
       ./samba_wrapper.nix
       ./mail_downloader.nix
@@ -81,7 +82,6 @@
   services.transmission_wrapper = {
     enable = true;
     fqdn = "transmission.home.lovisotto.it";
-    root_domain = "home.lovisotto.it";
   };
 
   services.samba_wrapper.enable = true;
@@ -96,17 +96,11 @@
     davDir = "${config.services.sftpd_storage.data_directory}/Documenti";
   };
 
-  services.navidrome = {
+  services.navidrome_wrapper = {
     enable = true;
-    openFirewall = true;
+    fqdn = "musica.home.lovisotto.it";
+    musicFolder = "${config.services.sftpd_storage.data_directory}/Musica";
     group = "storage";
-
-    settings = {
-      Address = "0.0.0.0";
-      Port = 4533;
-      MusicFolder = "${config.services.sftpd_storage.data_directory}/Musica";
-      EnableSharing = true;
-    };
   };
 
   sops.secrets.lego_acme_configuration = {
