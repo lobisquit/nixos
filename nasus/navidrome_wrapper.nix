@@ -42,6 +42,16 @@ in
   };
 
   config = mkIf cfg.enable {
+    # Overlay to fix build issue from
+    # https://github.com/NixOS/nixpkgs/issues/481611#issuecomment-3890134071
+    nixpkgs.overlays = [
+      (self: super: {
+        navidrome = self.callPackage (pkgs.fetchurl {
+          url = "https://raw.githubusercontent.com/cimm/nixpkgs/71aa374ad541b41e6fccd543c67b6952d2ccafca/pkgs/by-name/na/navidrome/package.nix";
+          sha256 = "16mfj85w8d7vzc9pgcgjn7a71z7jywqpdn8igk9zp0hw9dvm9rmq";
+        }) {};
+      })
+    ];
 
     services.navidrome = {
       enable = true;
