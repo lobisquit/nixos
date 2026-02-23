@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  mjpg-port = 5050;
+  webcam-port = 5050;
 in
 {
   imports =
@@ -64,8 +64,6 @@ in
 
   users.users."${config.services.octoprint.user}".extraGroups = ["video"];
 
-  services.mjpg-streamer.enable = true;
-
-  networking.firewall.allowedTCPPorts = [mjpg-port];
-  networking.firewall.allowedUDPPorts = [mjpg-port];
+  networking.firewall.allowedTCPPorts = [ webcam-port ];
+  networking.firewall.allowedUDPPorts = [ webcam-port ];
 }
