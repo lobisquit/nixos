@@ -47,6 +47,7 @@
 
   sops.secrets.wifi_password = {
     mode = "0400";
+    owner = "wpa_supplicant";
   };
 
   networking.wireless = {
@@ -65,7 +66,4 @@
   users.users."${config.services.octoprint.user}".extraGroups = ["video"];
 
   services.mjpg-streamer.enable = true;
-
-  networking.firewall.allowedTCPPorts = [ config.services.mjpg-streamer.port ];
-  networking.firewall.allowedUDPPorts = [ config.services.mjpg-streamer.port ];
 }

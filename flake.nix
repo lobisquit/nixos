@@ -58,7 +58,7 @@
             ];
           };
 
-          octoprint = nixpkgs_stable.lib.nixosSystem {
+          octoprint = nixpkgs_unstable.lib.nixosSystem {
             specialArgs = {inherit inputs outputs;};
             system = "aarch64-linux";
             modules = [
