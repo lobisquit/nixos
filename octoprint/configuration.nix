@@ -1,8 +1,5 @@
 { config, lib, pkgs, ... }:
 
-let
-  webcam-port = 5050;
-in
 {
   imports =
     [
@@ -29,6 +26,9 @@ in
     sops
     tmux
     age
+
+    ffmpeg
+    v4l-utils
   ];
 
   services.openssh = {
@@ -64,6 +64,8 @@ in
 
   users.users."${config.services.octoprint.user}".extraGroups = ["video"];
 
-  networking.firewall.allowedTCPPorts = [ webcam-port ];
-  networking.firewall.allowedUDPPorts = [ webcam-port ];
+  services.mjpg-streamer.enable = true;
+
+  networking.firewall.allowedTCPPorts = [ config.services.mjpg-streamer.port ];
+  networking.firewall.allowedUDPPorts = [ config.services.mjpg-streamer.port ];
 }
