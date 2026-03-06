@@ -16,6 +16,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (KeyboardButton, Message, ReplyKeyboardMarkup,
                            ReplyKeyboardRemove)
 from aiogram.types.bot_command import BotCommand
+from aiogram.types.input_file import BufferedInputFile
 
 from local_db import (archive_all_transactions, delete_last_transaction,
                       get_last_transaction, get_most_frequent_by_field,
@@ -143,15 +144,15 @@ async def send_list_of_transactions(message, archived=False):
 
     combined_description = '\n\n'.join(descriptions)
     if combined_description:
-        combined_description = '```\n' + combined_description + '\n```'
+        descriptions_file = BufferedInputFile(
+            file=combined_description.encode("utf-8"),
+            filename="transactions.txt")
+
+        await message.bot.send_document(
+            chat_id=message.chat.id,
+            document=descriptions_file)
     else:
-        combined_description = 'Nessuna transazione presente'
-
-    file_stream = BytesIO()
-    file_stream.write(combined_description.encode('utf-8'))
-    file_stream.seek(0)
-
-    await bot.send_document(message.chat.id, file_stream)
+        await message.answer('Nessuna transazione presente')
 
     return transactions
 
