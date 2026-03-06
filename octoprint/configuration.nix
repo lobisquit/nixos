@@ -1,10 +1,14 @@
 { config, lib, pkgs, ... }:
 
+let
+  secrets = config.sops.secrets;
+in
 {
   imports =
     [
       ./hardware-configuration.nix
       ./monitoring.nix
+      ./nginx_wrapper.nix
     ];
 
   boot.loader.grub.enable = false;
@@ -32,8 +36,8 @@
   ];
 
   services.openssh = {
-     enable = true;
-     openFirewall = true;
+    enable = true;
+    openFirewall = true;
   };
 
   networking.firewall.enable = true;
@@ -65,5 +69,47 @@
 
   users.users."${config.services.octoprint.user}".extraGroups = ["video"];
 
-  services.mjpg-streamer.enable = true;
+  services.mjpg-streamer = {
+    enable = true;
+  };
+
+  networking.firewall.allowedTCPPorts = [ 5050 ];
+  networking.firewall.allowedUDPPorts = config.networking.firewall.allowedTCPPorts;
+
+  sops.secrets.lego_acme_configuration.mode = "0400";
+  services.nginx_wrapper.env_file = config.sops.secrets.lego_acme_configuration.path;
+
+  services.nginx_wrapper.enable = true;
+  services.nginx.virtualHosts."octoprint.home.lovisotto.it" = {
+    enableACME = true;
+    forceSSL = true;
+    locations."/" = {
+      proxyPass = "http://127.0.0.1:${toString config.services.octoprint.port}";
+      recommendedProxySettings = true;
+    };
+
+    locations."/mjpg/" = {
+      proxyPass = "http://127.0.0.1:5050/";
+      recommendedProxySettings = true;
+    };
+  };
+
+  sops.secrets.desec_token = {
+    mode = "0400";
+    owner = "acme";
+    group = "acme";
+  };
+
+  security.acme.certs = {
+    "octoprint.home.lovisotto.it" = {
+      domain = "octoprint.home.lovisotto.it";
+      group = "nginx";
+      dnsProvider = "desec";
+      dnsResolver = "ns1.desec.io:53";
+      environmentFile = secrets.desec_token.path;
+      server = "https://acme-v02.api.letsencrypt.org/directory";
+      webroot = null;
+      extraLegoFlags = [];
+    };
+  };
 }
