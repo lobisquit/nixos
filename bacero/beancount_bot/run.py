@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 import sys
+from io import BytesIO
 from os import getenv
 from typing import Any
 
@@ -146,7 +147,11 @@ async def send_list_of_transactions(message, archived=False):
     else:
         combined_description = 'Nessuna transazione presente'
 
-    await message.answer(combined_description, parse_mode='MarkdownV2')
+    file_stream = BytesIO()
+    file_stream.write(combined_description.encode('utf-8'))
+    file_stream.seek(0)
+
+    await bot.send_document(message.chat.id, file_stream)
 
     return transactions
 
