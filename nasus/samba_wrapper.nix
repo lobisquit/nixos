@@ -46,7 +46,7 @@ in
           "force directory mode" = "0775";
           "follow symlinks" = "yes";
 
-          "hosts allow" = "192.168.0.0/24 192.168.77.0/24 localhost";
+          "hosts allow" = "10.1.0.0/16 10.3.0.0/16 localhost";
           "hosts deny" = "0.0.0.0/0";
           "guest account" = "nobody";
           "map to guest" = "bad user";
