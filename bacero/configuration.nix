@@ -9,6 +9,7 @@ in
       ./backlight_off.nix
       ./hardware-configuration.nix
       ./doorman.nix
+      ./mensaspaziale_bot.nix
       ./monitoring.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
@@ -86,6 +87,7 @@ in
 
   services.doorman.enable = true;
   services.beancount_bot.enable = true;
+  services.mensaspaziale_bot.enable = true;
 
   sops.secrets.lego_acme_configuration = {
     mode = "0400";
