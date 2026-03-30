@@ -52,7 +52,7 @@ class InsertionForm(StatesGroup):
     source_set = State()
 
 
-amount_pattern = re.compile(r'^(\d+)(\.(\d+))?( ([A-Z][A-Z0-9\.\-_]+))?$')
+amount_pattern = re.compile(r'^(\d+)([,\.](\d+))?( ([A-Z][A-Z0-9\.\-_]+))?$')
 
 def parse_amount(message_text, default_currency):
     groups = amount_pattern.match(message_text)
@@ -70,9 +70,20 @@ def parse_amount(message_text, default_currency):
         return integer_part, cent_part, currency_part
 
 
+def title_if_not_acronym(account_word):
+    if len(account_word) > 3:
+        account_word = account_word.title()
+
+    return account_word
+
+
 def parse_account_name(message_text):
     removed_extra_spaces = re.sub(r'\s+', ' ', message_text.strip())
-    return removed_extra_spaces.replace(' ', ':')
+    account_words = removed_extra_spaces \
+        .replace(' ', ':') \
+        .split(':')
+
+    return ':'.join(map(title_if_not_acronym, account_words))
 
 
 async def get_field_suggestions(user_id, field_id, n=12):
@@ -224,6 +235,9 @@ async def description_setter(message: Message, state: FSMContext) -> None:
 @form_router.message(InsertionForm.description_set)
 async def source_account_setter(message: Message, state: FSMContext) -> None:
     source_account = parse_account_name(message.text)
+    if not source_account.startswith('Assets'):
+        source_account = 'Assets:' + source_account
+
     await state.update_data(source_account=source_account)
     await state.set_state(InsertionForm.source_set)
 
@@ -234,6 +248,9 @@ async def source_account_setter(message: Message, state: FSMContext) -> None:
 @form_router.message(InsertionForm.source_set)
 async def destination_account_setter(message: Message, state: FSMContext) -> None:
     destination_account = parse_account_name(message.text)
+    if not destination_account.startswith('Expenses'):
+        destination_account = 'Expenses:' + destination_account
+
     await state.update_data(destination_account=destination_account)
 
     insertion_form_data = await state.get_data()
