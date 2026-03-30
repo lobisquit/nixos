@@ -70,20 +70,29 @@ def parse_amount(message_text, default_currency):
         return integer_part, cent_part, currency_part
 
 
-def title_if_not_acronym(account_word):
+def custom_title_word(account_word):
     if len(account_word) > 3:
         account_word = account_word.title()
+    else:
+        account_word = account_word.upper()
 
     return account_word
 
 
 def parse_account_name(message_text):
-    removed_extra_spaces = re.sub(r'\s+', ' ', message_text.strip())
+    no_colons = message_text.strip().replace(':', ' ')
+    removed_extra_spaces = re.sub(r'\s+', ' ', no_colons)
     account_words = removed_extra_spaces \
         .replace(' ', ':') \
         .split(':')
 
-    return ':'.join(map(title_if_not_acronym, account_words))
+    return ':'.join(map(custom_title_word, account_words))
+
+
+def is_account_name_complete(account_name):
+    return account_name.startswith('Expenses:') \
+        or account_name.startswith('Income:') \
+        or account_name.startswith('Assets:')
 
 
 async def get_field_suggestions(user_id, field_id, n=12):
@@ -235,7 +244,7 @@ async def description_setter(message: Message, state: FSMContext) -> None:
 @form_router.message(InsertionForm.description_set)
 async def source_account_setter(message: Message, state: FSMContext) -> None:
     source_account = parse_account_name(message.text)
-    if not source_account.startswith('Assets'):
+    if not is_account_name_complete(source_account):
         source_account = 'Assets:' + source_account
 
     await state.update_data(source_account=source_account)
@@ -248,7 +257,7 @@ async def source_account_setter(message: Message, state: FSMContext) -> None:
 @form_router.message(InsertionForm.source_set)
 async def destination_account_setter(message: Message, state: FSMContext) -> None:
     destination_account = parse_account_name(message.text)
-    if not destination_account.startswith('Expenses'):
+    if not is_account_name_complete(destination_account):
         destination_account = 'Expenses:' + destination_account
 
     await state.update_data(destination_account=destination_account)
