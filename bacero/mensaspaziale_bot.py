@@ -112,6 +112,9 @@ def send_telegram(text: str, bot_token: str, chat_ids: list[str]) -> None:
             "text": text,
             "parse_mode": "MarkdownV2",
         }).encode()
+
+        print(f"Sending to {str(chat_id)[:3]}...")
+
         req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req) as resp:
             result = json.loads(resp.read().decode())
