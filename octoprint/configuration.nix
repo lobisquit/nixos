@@ -86,6 +86,11 @@ in
     locations."/" = {
       proxyPass = "http://127.0.0.1:${toString config.services.octoprint.port}";
       recommendedProxySettings = true;
+
+      proxyWebsockets = true;
+      extraConfig = ''
+          proxy_read_timeout 86400s;
+      '';
     };
 
     locations."/mjpg/" = {
