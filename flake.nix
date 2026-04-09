@@ -1,5 +1,7 @@
 {
   inputs = {
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+
     nixpkgs_unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs_stable.url = "github:nixos/nixpkgs/nixos-25.11";
 
@@ -17,6 +19,7 @@
               nixpkgs_unstable,
               nixpkgs_stable,
               home-manager,
+              nixos-hardware,
               sops-nix_stable,
               sops-nix_unstable,
               ...
@@ -64,6 +67,7 @@
             modules = [
               ./octoprint/configuration.nix
               sops-nix_stable.nixosModules.sops
+              nixos-hardware.nixosModules.raspberry-pi-4
             ];
           };
         };
