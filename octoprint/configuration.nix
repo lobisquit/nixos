@@ -73,9 +73,6 @@ in
     enable = true;
   };
 
-  networking.firewall.allowedTCPPorts = [ 5050 ];
-  networking.firewall.allowedUDPPorts = config.networking.firewall.allowedTCPPorts;
-
   sops.secrets.lego_acme_configuration.mode = "0400";
   services.nginx_wrapper.env_file = config.sops.secrets.lego_acme_configuration.path;
 
