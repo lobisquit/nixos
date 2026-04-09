@@ -23,6 +23,17 @@
     ];
   };
 
+  nix.distributedBuilds = true;
+  nix.buildMachines = [{
+    hostName = "octoprint.home.lovisotto.it";
+    system = "aarch64-linux";
+    maxJobs = 4;
+    speedFactor = 2;
+    supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
+    sshUser = "root";
+    sshKey = "/home/enrico/.ssh/raspberrypi";
+  }];
+
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
   nixpkgs.config.allowUnfree = true;
@@ -31,7 +42,6 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.tmp.cleanOnBoot = true;
 
   services.printing.enable = true;
