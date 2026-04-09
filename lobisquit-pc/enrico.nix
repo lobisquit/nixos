@@ -46,6 +46,8 @@
         };
         init.defaultBranch = "main";
       };
+
+      signing.format = null;
     };
 
     home-manager.enable = true;
