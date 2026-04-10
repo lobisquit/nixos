@@ -56,4 +56,14 @@ in
       autostart = false;
     };
   };
+
+  sops.secrets.ssh_self_cert = {
+    mode = "0400";
+    owner = "enrico";
+  };
+
+  sops.secrets.ssh_self_key = {
+    mode = "0400";
+    owner = "enrico";
+  };
 }

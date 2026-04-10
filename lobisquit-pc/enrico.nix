@@ -93,43 +93,14 @@
       };
     };
 
+    # Cannot use sops in home-manager, it seems. SSH secrets are
+    # defined in networking.nix and paths are hardcoded here.
+
     ssh = {
       enable = true;
       enableDefaultConfig = false;
 
       matchBlocks = {
-        root_nasus = {
-          hostname = "nasus.home.lovisotto.it";
-          user = "root";
-          identityFile = "/home/enrico/.ssh/self";
-          port = 2222;
-          identitiesOnly = true;
-        };
-
-        storage_unison_nasus = {
-          hostname = "nasus.home.lovisotto.it";
-          user = "storage_unison";
-          identityFile = "/home/enrico/.ssh/self";
-          port = 2222;
-          identitiesOnly = true;
-        };
-
-        storage_nasus = {
-          hostname = "nasus.home.lovisotto.it";
-          user = "storage";
-          identityFile = "/home/enrico/.ssh/self";
-          port = 2222;
-          identitiesOnly = true;
-        };
-
-        root_minipc = {
-          hostname = "10.63.16.102";
-          user = "root";
-          identityFile = "/home/enrico/.ssh/minipc";
-          port = 22;
-          identitiesOnly = true;
-        };
-
         "git.sr.ht" = {
           hostname = "git.sr.ht";
           user = "git";
@@ -151,6 +122,47 @@
           identitiesOnly = true;
         };
 
+        root_nasus = {
+          hostname = "nasus.home.lovisotto.it";
+          user = "root";
+          identityFile = "/run/secrets/ssh_self_key";
+          port = 2222;
+          identitiesOnly = true;
+          extraOptions = {
+            CertificateFile = "/run/secrets/ssh_self_cert";
+          };
+        };
+
+        storage_unison_nasus = {
+          hostname = "nasus.home.lovisotto.it";
+          user = "storage_unison";
+          identityFile = "/run/secrets/ssh_self_key";
+          port = 2222;
+          identitiesOnly = true;
+          extraOptions = {
+            CertificateFile = "/run/secrets/ssh_self_cert";
+          };
+        };
+
+        storage_nasus = {
+          hostname = "nasus.home.lovisotto.it";
+          user = "storage";
+          identityFile = "/run/secrets/ssh_self_key";
+          port = 2222;
+          identitiesOnly = true;
+          extraOptions = {
+            CertificateFile = "/run/secrets/ssh_self_cert";
+          };
+        };
+
+        root_minipc = {
+          hostname = "10.63.16.102";
+          user = "root";
+          identityFile = "/home/enrico/.ssh/minipc";
+          port = 22;
+          identitiesOnly = true;
+        };
+
         root_router = {
           hostname = "home.lovisotto.it";
           user = "root";
@@ -168,8 +180,11 @@
         root_bacero = {
           hostname = "bacero.home.lovisotto.it";
           user = "root";
-          identityFile = "/home/enrico/.ssh/self";
+          identityFile = "/run/secrets/ssh_self_key";
           identitiesOnly = true;
+          extraOptions = {
+            CertificateFile = "/run/secrets/ssh_self_cert";
+          };
         };
       };
     };
