@@ -12,6 +12,11 @@ in
   };
 
   config = {
+    environment.etc."ssh/ca_key.pub" = {
+      source = ../shared/ssh_ca_key.pub;
+      mode = "0644";
+    };
+
     services.openssh = {
       enable = true;
 
@@ -19,6 +24,8 @@ in
       openFirewall = true;
 
       allowSFTP = true;
+
+      extraConfig = "TrustedUserCAKeys /etc/ssh/ca_key.pub";
 
       settings = {
         PermitRootLogin = "prohibit-password";

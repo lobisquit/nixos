@@ -101,7 +101,7 @@
         root_nasus = {
           hostname = "nasus.home.lovisotto.it";
           user = "root";
-          identityFile = "/home/enrico/.ssh/nasus";
+          identityFile = "/home/enrico/.ssh/self";
           port = 2222;
           identitiesOnly = true;
         };
@@ -109,7 +109,7 @@
         storage_unison_nasus = {
           hostname = "nasus.home.lovisotto.it";
           user = "storage_unison";
-          identityFile = "/home/enrico/.ssh/storage_unison";
+          identityFile = "/home/enrico/.ssh/self";
           port = 2222;
           identitiesOnly = true;
         };
@@ -117,7 +117,7 @@
         storage_nasus = {
           hostname = "nasus.home.lovisotto.it";
           user = "storage";
-          identityFile = "/home/enrico/.ssh/storage";
+          identityFile = "/home/enrico/.ssh/self";
           port = 2222;
           identitiesOnly = true;
         };
@@ -168,7 +168,7 @@
         root_bacero = {
           hostname = "bacero.home.lovisotto.it";
           user = "root";
-          identityFile = "/home/enrico/.ssh/bacero";
+          identityFile = "/home/enrico/.ssh/self";
           identitiesOnly = true;
         };
       };
