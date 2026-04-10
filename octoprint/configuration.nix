@@ -35,9 +35,15 @@ in
     v4l-utils
   ];
 
+  environment.etc."ssh/ca_key.pub" = {
+    source = ../shared/ssh_ca_key.pub;
+    mode = "0644";
+  };
+
   services.openssh = {
     enable = true;
     openFirewall = true;
+    extraConfig = "TrustedUserCAKeys /etc/ssh/ca_key.pub";
   };
 
   networking.firewall.enable = true;

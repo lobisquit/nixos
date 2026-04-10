@@ -173,8 +173,11 @@
         root_octoprint = {
           hostname = "octoprint.home.lovisotto.it";
           user = "root";
-          identityFile = "/home/enrico/.ssh/raspberrypi";
+          identityFile = "/run/secrets/ssh_self_key";
           identitiesOnly = true;
+          extraOptions = {
+            CertificateFile = "/run/secrets/ssh_self_cert";
+          };
         };
 
         root_bacero = {
