@@ -15,12 +15,12 @@
   nix.settings.experimental-features = ["nix-command" "flakes"];
 
   nixpkgs.config.allowUnfree = true;
-
   system.stateVersion = "23.11";
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.tmp.cleanOnBoot = true;
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
   services.printing.enable = true;
 
