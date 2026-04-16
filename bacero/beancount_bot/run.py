@@ -127,35 +127,116 @@ async def cancel_insertion(message: Message, state: FSMContext) -> None:
     await message.answer("Inserimento annullato.", reply_markup=ReplyKeyboardRemove())
 
 
+class Movement:
+    def __init__(self, account, amount_cent=None, currency=None, exchange_cent_eur=None):
+        self.account = account
+        self.amount_cent = amount_cent
+        self.currency = currency
+        self.exchange_cent_eur = exchange_cent_eur
+
+        if self.currency is None:
+            self.currency = 'EUR'
+
+    def to_beancount(self, account_max_len):
+        tail = ''
+
+        if self.amount_cent:
+            amount_integer = self.amount_cent // 100
+            amount_cents = self.amount_cent % 100
+
+            tail = f'{amount_integer}.{amount_cents:02} {self.currency}'
+
+            if self.exchange_cent_eur:
+                exchange_integer = self.exchange_cent_eur // 100
+                exchange_cents = self.exchange_cent_eur % 100
+
+                tail += " @ {exchange_integer}.{exchange_cents:02} EUR"
+
+        padded_account = self.account.ljust(account_max_len)
+        return f'  {padded_account}  {tail}'
+
+
+class Transaction:
+    def __init__(self, date, txn_symbol, description, movements):
+        self.date = date
+        self.txn_symbol = txn_symbol
+        self.description = description
+        self.movements = movements
+
+    def to_beancount(self):
+        header = f'{self.date} {self.txn_symbol} "{self.description}"'
+
+        account_max_length = max(len(mov.account) for mov in self.movements)
+        movements = [mov.to_beancount(account_max_length) for mov in self.movements]
+
+        lines = [ header ] + sorted(movements)
+
+        return '\n'.join(lines)
+
+
+def get_ticket_movement(description):
+    groups = ticket_pattern.search(description)
+    if groups is None:
+        return None
+
+    n_tickets = int(groups[1])
+    ticket_type = groups[2].upper()
+
+    if ticket_type == 'EDENRED':
+        ticket_account = 'Assets:ES:Buoni:Pasto'
+        exchange_cent = 800
+
+    elif ticket_type == 'PLUXEE':
+        ticket_account = 'Assets:EL:Buoni:Pasto'
+        exchange_cent = 516
+
+    elif ticket_type == 'UCIVOUCHER' or ticket_type == 'UCI':
+        ticket_account = 'Assets:EL:Buoni:UCI'
+        ticket_type = 'UCIVOUCHER' # override
+        exchange_cent = 690
+
+    else:
+        return None
+
+    return Movement(account=ticket_account,
+                    amount_cent=-n_tickets * 100,
+                    currency=ticket_type,
+                    exchange_cent_eur=exchange_cent)
+
+
 def db_transaction_to_beancount(db_trans):
-    insert_time = db_trans['insert_time']
-    insert_date = insert_time.date()
+    insert_date = db_trans['insert_time'].date()
 
-    amount_integer = db_trans['amount_cent'] // 100
-    amount_cents = db_trans['amount_cent'] % 100
-
+    amount_cent = db_trans['amount_cent']
     currency = db_trans['currency']
-    source_account = db_trans['source_account']
-    destination_account = db_trans['destination_account']
     description = db_trans['description']
 
+    # extra information from description
     to_be_checked = ('!' in description) or (amount_integer > 10000)
     if to_be_checked:
         txn_symbol = '!'
     else:
         txn_symbol = '*'
 
-    account_max_len = max(len(source_account), len(destination_account))
-    padded_source_account = source_account.ljust(account_max_len)
-    padded_destination_account = destination_account.ljust(account_max_len)
+    # prepare movements
+    source_movement = Movement(db_trans['source_account'])
+    ticket_movement = get_ticket_movement(description)
+    destination_movement = Movement(db_trans['destination_account'], amount_cent, currency)
 
-    lines = [
-        f'{insert_date} {txn_symbol} "{description}"',
-        f'  {padded_source_account}  -{amount_integer}.{amount_cents:02} {currency}',
-        f'  {padded_destination_account}',
-    ]
+    if ticket_movement:
+        # Tickets cannot be split
+        ticket_units = ticket_movement.amount_cent // 100
+        # Movement from ticket asset is always negative
+        destination_movement.amount_cent += \
+            ticket_units * ticket_movement.amount_cent
 
-    return '\n'.join(lines)
+    # collect movements
+    movements = [source_movement, destination_movement]
+    if ticket_movement:
+        movements.append(ticket_movement)
+
+    tx = Transaction(insert_date, txn_symbol, description, movements)
+    return tx.to_beancount()
 
 
 async def send_list_of_transactions(message, archived=False):
