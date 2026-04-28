@@ -30,6 +30,7 @@
       tor-browser
       vlc
       freecad
+      blender
       prusa-slicer
       isort
       age
