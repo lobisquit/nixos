@@ -31,6 +31,7 @@
       vlc
       freecad
       blender
+      openscad
       prusa-slicer
       isort
       age
