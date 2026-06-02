@@ -66,7 +66,11 @@
       '';
     };
 
-    firefox.enable = true;
+    firefox = {
+      enable = true;
+      configPath = "${config.xdg.configHome}/mozilla/firefox";
+    };
+
     emacs.enable = true;
     alacritty.enable = true;
     htop.enable = true;
@@ -102,7 +106,7 @@
       enable = true;
       enableDefaultConfig = false;
 
-      matchBlocks = {
+      settings = {
         "git.sr.ht" = {
           hostname = "git.sr.ht";
           user = "git";
@@ -130,9 +134,7 @@
           identityFile = "/run/secrets/ssh_self_key";
           port = 2222;
           identitiesOnly = true;
-          extraOptions = {
-            CertificateFile = "/run/secrets/ssh_self_cert";
-          };
+          CertificateFile = "/run/secrets/ssh_self_cert";
         };
 
         storage_unison_nasus = {
@@ -141,9 +143,7 @@
           identityFile = "/run/secrets/ssh_self_key";
           port = 2222;
           identitiesOnly = true;
-          extraOptions = {
-            CertificateFile = "/run/secrets/ssh_self_cert";
-          };
+          CertificateFile = "/run/secrets/ssh_self_cert";
         };
 
         storage_nasus = {
@@ -152,9 +152,7 @@
           identityFile = "/run/secrets/ssh_self_key";
           port = 2222;
           identitiesOnly = true;
-          extraOptions = {
-            CertificateFile = "/run/secrets/ssh_self_cert";
-          };
+          CertificateFile = "/run/secrets/ssh_self_cert";
         };
 
         root_minipc = {
@@ -177,9 +175,7 @@
           user = "root";
           identityFile = "/run/secrets/ssh_self_key";
           identitiesOnly = true;
-          extraOptions = {
-            CertificateFile = "/run/secrets/ssh_self_cert";
-          };
+          CertificateFile = "/run/secrets/ssh_self_cert";
         };
 
         root_bacero = {
@@ -187,9 +183,7 @@
           user = "root";
           identityFile = "/run/secrets/ssh_self_key";
           identitiesOnly = true;
-          extraOptions = {
-            CertificateFile = "/run/secrets/ssh_self_cert";
-          };
+          CertificateFile = "/run/secrets/ssh_self_cert";
         };
       };
     };
