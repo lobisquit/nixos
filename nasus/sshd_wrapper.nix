@@ -47,7 +47,9 @@ in
                           "curve25519-sha256@libssh.org"
                           "diffie-hellman-group16-sha512"
                           "diffie-hellman-group18-sha512"
-                          "diffie-hellman-group14-sha256" ];
+                          "diffie-hellman-group14-sha256"
+                          "mlkem768x25519-sha256"
+                        ];
 
 
         Macs = [ "hmac-sha2-256-etm@openssh.com"
