@@ -35,6 +35,7 @@
       prusa-slicer
       isort
       age
+      ripgrep
     ];
   };
 
