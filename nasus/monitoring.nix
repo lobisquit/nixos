@@ -133,7 +133,7 @@ in
         ];
       };
 
-      startAt = "*:0/30";
+      startAt = "*:0/15";
     };
 
     systemd.timers.healthchecks_io.timerConfig.RandomizedDelaySec = "10m";
