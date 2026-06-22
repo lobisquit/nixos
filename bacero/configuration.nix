@@ -93,7 +93,7 @@ in
 
   services.doorman.enable = true;
   services.beancount_bot.enable = true;
-  services.mensaspaziale_bot.enable = true;
+  services.mensaspaziale_bot.enable = false;
 
   sops.secrets.lego_acme_configuration = {
     mode = "0400";

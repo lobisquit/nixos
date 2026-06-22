@@ -73,7 +73,7 @@
     data_directory = config.services.sftpd_storage.data_directory;
   };
 
-  services.telegram_reminder.enable = true;
+  services.telegram_reminder.enable = false;
 
   services.monitoring.enable = true;
 
