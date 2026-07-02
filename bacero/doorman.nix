@@ -89,6 +89,10 @@ in
           "SERIAL_DEV=/dev/${cfg.ttyDoorman}"
           "TMP_PATH=${config.users.users.doorman.home}"
         ];
+        Restart = "always";
+        RestartSec = "5s";
+        StartLimitIntervalSec = 60;
+        StartLimitBurst = 5;
       };
     };
   };
