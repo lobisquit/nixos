@@ -85,7 +85,10 @@ in
         User = config.users.users.doorman.name;
         PrivateTmp = true;
         EnvironmentFile = secrets.doorman.path;
-        Environment = [ "SERIAL_DEV=/dev/${cfg.ttyDoorman}" ];
+        Environment = [
+          "SERIAL_DEV=/dev/${cfg.ttyDoorman}"
+          "TMP_PATH=${config.users.users.doorman.home}"
+        ];
       };
     };
   };

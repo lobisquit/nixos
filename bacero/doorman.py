@@ -1,16 +1,20 @@
+import os
 import subprocess
+import sys
+import time
+from pathlib import Path
+
 import requests
 import serial
-import os
-from pathlib import Path
-import time
-import sys
+
 
 def env(name):
     return os.environ[name]
 
 
 if __name__ == '__main__':
+    print(f"Using {Path(env('TMP_PATH'))} as temporary directory")
+
     with serial.Serial(env('SERIAL_DEV'), env('SERIAL_BAUD_RATE'), timeout=0) as ser:
         ser.setRTS(False)
         ser.setDTR(False)
