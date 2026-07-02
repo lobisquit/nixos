@@ -117,7 +117,7 @@ class IlPostScraper:
                         .get_attribute("src")
 
         # download to episode path
-        log.info("Downloading episode")
+        log.info(f"Downloading episode from {audio_url}")
         response = requests.get(audio_url)
         log.info("Episode downloaded")
 
