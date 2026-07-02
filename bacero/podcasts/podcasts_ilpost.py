@@ -103,7 +103,7 @@ class IlPostScraper:
         self.logged_in = True
         log.info("Ended login")
 
-    def download_episode(self, episode_url, episode_path):
+    def get_audio_info(self, episode_url):
         if not self.logged_in:
             self.login()
 
@@ -116,21 +116,12 @@ class IlPostScraper:
         audio_url = self.get_when_ready((By.TAG_NAME, "audio")) \
                         .get_attribute("src")
 
-        # download to episode path
-        log.info(f"Downloading episode from {audio_url}")
-        response = requests.get(audio_url)
-        log.info("Episode downloaded")
+        # get size (needed by spec compliant RSS feeds), falling back
+        # to zero if anything is bad
+        with requests.get(audio_url, stream=True) as resp:
+            audio_size_byte = resp.headers.get('Content-Length', '0')
 
-        if response.ok:
-            Path(episode_path).parent.mkdir(parents=True,
-                                            exist_ok=True)
-
-            with open(episode_path, "wb") as file:
-                file.write(response.content)
-        else:
-            raise ValueError(
-                f"Failed to download the file. Status code: {response.status_code}")
-
+        return audio_url, audio_size_byte
 
     def get_description(self, episode_url):
         if not self.logged_in:
@@ -188,14 +179,27 @@ if __name__ == '__main__':
 
             for entry in feed.entries:
                 episode_url = entry.link
-                episode_path = Path(feed_label) / (Path(episode_url).stem + '.mp3')
-                description_path = Path(feed_label) / (Path(episode_url).stem + '.html')
 
-                if not Path(episode_path).is_file():
-                    log.info(f'Downloading {episode_path}')
-                    scraper.download_episode(episode_url, episode_path)
+                # Fetch audio url of the episode if not present
+                audio_info_path = Path(feed_label) / (Path(episode_url).stem + '.txt')
+                audio_info_path.parent.mkdir(parents=True, exist_ok=True)
+
+                if not Path(audio_info_path).is_file():
+                    log.info(f'Getting audio url of {episode_url}')
+                    audio_url, audio_size_byte = scraper.get_audio_info(episode_url)
+                    audio_info = {'url': audio_url, 'size_byte': audio_size_byte}
+
+                    with open(audio_info_path, 'w') as f:
+                        json.dump(audio_info, f)
                 else:
-                    log.info(f'Already found "{episode_path}"')
+                    log.info(f'Already found "{audio_info_path}"')
+
+                    with open(audio_info_path, 'r') as f:
+                        audio_info = json.load(f)
+
+                # Fetch or read description of the episode
+                description_path = Path(feed_label) / (Path(episode_url).stem + '.html')
+                description_path.parent.mkdir(parents=True, exist_ok=True)
 
                 if not Path(description_path).is_file():
                     log.info(f"Getting description of {episode_url}")
@@ -214,9 +218,7 @@ if __name__ == '__main__':
                 fe.title(entry.title)
                 fe.link(entry.links[0])
                 fe.description(episode_description)
-                fe.enclosure("https://" + str(base_url / episode_path),
-                             episode_path.stat().st_size,
-                             'audio/mpeg')
+                fe.enclosure(audio_info['url'], audio_info['size_byte'], 'audio/mpeg')
                 fe.pubDate(entry.published)
 
             fg.rss_file(Path(feed_label) / 'feed.xml')
