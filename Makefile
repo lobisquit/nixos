@@ -24,10 +24,10 @@ test-self:
 clean-self:
 	sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations +2
 	sudo nix-env --profile /nix/var/nix/profiles/system --list-generations
-	sudo rm -rf /nix/var/nix/gcroots/auto/*
-	find ~ -name "result" -type l -exec readlink {} \; | grep "^/nix/store"
-	find ~ -name "result" -type l -delete
-	nix-shell -p home-manager --command 'home-manager expire-generations "-30 days"'
+#	sudo rm -rf /nix/var/nix/gcroots/auto/*
+#	find ~ -name "result" -type l -exec readlink {} \; | grep "^/nix/store"
+#	find ~ -name "result" -type l -delete
+#	nix-shell -p home-manager --command 'home-manager expire-generations "-30 days"'
 	sudo nix-collect-garbage -d
 	sudo nixos-rebuild boot --flake '.#'
 
