@@ -50,7 +50,10 @@ in
         Group = config.users.users.beancount_bot.group;
         EnvironmentFile = secrets.beancount_bot_environment.path;
         WorkingDirectory = "${./beancount_bot}";
-
+        Restart = "always";
+        RestartSec = "5s";
+        StartLimitIntervalSec = 60;
+        StartLimitBurst = 5;
         PrivateTmp = true;
         InaccessiblePaths = [
           "/home"
