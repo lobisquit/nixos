@@ -28,8 +28,12 @@
     git
     wireguard-tools
     acl
-    htop
+    btop
+
+    qmk-udev-rules
   ];
+
+  hardware.keyboard.qmk.enable = true;
 
   home-manager = {
     extraSpecialArgs = { inherit inputs outputs; };

@@ -35,11 +35,20 @@
       prusa-slicer
       isort
       age
+
       ripgrep
+      qmk
+      qmk_hid
+      via
+      vial
     ];
   };
 
   programs = {
+    thunderbird = {
+      enable = true;
+    };
+
     git = {
       enable = true;
       settings = {
