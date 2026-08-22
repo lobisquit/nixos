@@ -29,11 +29,8 @@
     wireguard-tools
     acl
     btop
-
-    qmk-udev-rules
+    via
   ];
-
-  hardware.keyboard.qmk.enable = true;
 
   home-manager = {
     extraSpecialArgs = { inherit inputs outputs; };
@@ -45,6 +42,11 @@
   sops.defaultSopsFile = ./secrets.yaml;
   sops.age.keyFile = "/etc/age/enrico.txt";
 
-  # required by platformio
-  services.udev.packages = with pkgs; [ platformio-core.udev ];
+  # required by platformio and Via auto-detection
+  services.udev.packages = with pkgs; [
+    platformio-core.udev
+    via
+  ];
+
+  hardware.keyboard.qmk.enable = true;
 }

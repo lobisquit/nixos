@@ -35,12 +35,7 @@
       prusa-slicer
       isort
       age
-
       ripgrep
-      qmk
-      qmk_hid
-      via
-      vial
     ];
   };
 
