@@ -29,6 +29,7 @@
     wireguard-tools
     acl
     btop
+    qmk
     via
   ];
 
