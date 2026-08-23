@@ -30,7 +30,7 @@
     acl
     btop
     qmk
-    via
+    vial
   ];
 
   home-manager = {
@@ -46,6 +46,7 @@
   # required by platformio and Via auto-detection
   services.udev.packages = with pkgs; [
     platformio-core.udev
+    vial
     via
   ];
 
