@@ -94,12 +94,4 @@ in
   services.doorman.enable = true;
   services.beancount_bot.enable = true;
   services.mensaspaziale_bot.enable = false;
-
-  sops.secrets.lego_acme_configuration = {
-    mode = "0400";
-    owner = "acme";
-    group = "acme";
-  };
-
-  services.nginx_wrapper.env_file = secrets.lego_acme_configuration.path;
 }

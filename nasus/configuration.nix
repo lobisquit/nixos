@@ -102,12 +102,4 @@
     musicFolder = "${config.services.sftpd_storage.data_directory}/Musica";
     group = "storage";
   };
-
-  sops.secrets.lego_acme_configuration = {
-    mode = "0400";
-    owner = "acme";
-    group = "acme";
-  };
-
-  services.nginx_wrapper.env_file = config.sops.secrets.lego_acme_configuration.path;
 }

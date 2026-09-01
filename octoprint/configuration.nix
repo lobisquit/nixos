@@ -79,9 +79,6 @@ in
     enable = true;
   };
 
-  sops.secrets.lego_acme_configuration.mode = "0400";
-  services.nginx_wrapper.env_file = config.sops.secrets.lego_acme_configuration.path;
-
   services.nginx_wrapper.enable = true;
   services.nginx.virtualHosts."octoprint.home.lovisotto.it" = {
     enableACME = true;
