@@ -51,4 +51,5 @@
   ];
 
   hardware.keyboard.qmk.enable = true;
+  programs.kclock.enable = true;
 }

@@ -23,7 +23,6 @@
       gnumake
       audacious
       sops
-      popcorntime
       unison
       kicad-small
       nmon
