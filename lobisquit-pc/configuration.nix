@@ -22,7 +22,17 @@
   boot.tmp.cleanOnBoot = true;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
-  services.printing.enable = true;
+  services.printing = {
+    enable = true;
+    drivers = [ pkgs.epson-escpr ];
+  };
+
+  hardware.printers.ensurePrinters = [{
+  name = "EpsonXP2200_Somina_Gens";
+  deviceUri = "socket://192.168.1.57:9100";
+  model = "epson-inkjet-printer-escpr/Epson-XP-2200_Series-epson-escpr-en.ppd";
+  ppdOptions.PageSize = "A4";
+}];
 
   environment.systemPackages = with pkgs; [
     git
