@@ -14,6 +14,7 @@
       ./samba_wrapper.nix
       ./mail_downloader.nix
       ./cal_card_downloader.nix
+      ./xmpp_server.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -102,4 +103,6 @@
     musicFolder = "${config.services.sftpd_storage.data_directory}/Musica";
     group = "storage";
   };
+
+  services.xmpp_server.enable = true;
 }
