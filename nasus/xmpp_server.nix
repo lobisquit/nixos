@@ -2,6 +2,7 @@
 
 let
   cfg = config.services.xmpp_server;
+  secrets = config.sops.secrets;
   domain = cfg.domain;
   certDir = config.security.acme.certs.${domain}.directory;
   prosodyDir = "${cfg.storageDir}/prosody";
@@ -20,12 +21,6 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ "enrico@${cfg.domain}" ];
       description = "Server admin JIDs.";
-    };
-
-    acmeEmail = lib.mkOption {
-      type = lib.types.str;
-      default = "enrico@${cfg.domain}";
-      description = "Email for ACME (Let's Encrypt) notices.";
     };
 
     federation = lib.mkOption {
@@ -47,20 +42,18 @@ in
   config = lib.mkIf cfg.enable {
     sops.secrets.desec_token = { };
 
-    # DNS-01 challenge, works although the domain itself is hosted elsewhere
     security.acme = {
       acceptTerms = true;
       certs.${domain} = {
         domain = domain;
-        email = cfg.acmeEmail;
         extraDomainNames = [ "conference.${domain}" "upload.${domain}" ];
-        dnsProvider = "desec";
-        credentialFiles."DESEC_TOKEN_FILE" = config.sops.secrets.desec_token.path;
-        environmentFile = builtins.toFile "acme-desec.env" ''
-          DESEC_PROPAGATION_TIMEOUT=600
-          DESEC_POLLING_INTERVAL=10
-        '';
         group = "prosody";
+        dnsProvider = "desec";
+        dnsResolver = "ns1.desec.io:53";
+        environmentFile = secrets.desec_token.path;
+        server = "https://acme-v02.api.letsencrypt.org/directory";
+        webroot = null;
+
         reloadServices = [ "prosody" ];
       };
     };
