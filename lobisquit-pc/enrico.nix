@@ -35,6 +35,7 @@
       isort
       age
       ripgrep
+      gajim
     ];
   };
 
