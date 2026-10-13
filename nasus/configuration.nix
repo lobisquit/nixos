@@ -15,6 +15,7 @@
       ./mail_downloader.nix
       ./cal_card_downloader.nix
       ./xmpp_server.nix
+      ./xmpp_telegram.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -105,4 +106,8 @@
   };
 
   services.xmpp_server.enable = true;
+  services.xmpp_telegram = {
+    enable = true;
+    debug = true;
+  };
 }
