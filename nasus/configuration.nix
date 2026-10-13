@@ -16,6 +16,7 @@
       ./cal_card_downloader.nix
       ./xmpp_server.nix
       ./xmpp_telegram.nix
+      ./xmpp_irc.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -110,4 +111,5 @@
     enable = true;
     debug = true;
   };
+  services.xmpp_irc.enable = true;
 }
