@@ -112,5 +112,9 @@ in
       unitConfig.RequiresMountsFor = [ dataDir ];
       preStart = "mkdir -p ${dataDir}";
     };
+
+    systemd.services.podman-slidgram.serviceConfig = {
+      LogRateLimitIntervalSec = 0;
+    };
   };
 }
