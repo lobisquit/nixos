@@ -44,5 +44,10 @@ in
       BindPaths = lib.mkForce [];
       BindReadOnlyPaths = lib.mkForce [];
     };
+
+    systemd.services.biboumi = {
+      after = [ "prosody.service" ];
+      wants = [ "prosody.service" ];
+    };
   };
 }
