@@ -96,8 +96,6 @@ in
 
         -- No federation: don't talk to other XMPP servers
         modules_disabled = { "s2s" }
-
-        log = { debug = "*console" }  -- goes to the journal; revert afterwards, it's noisy
       '';
     };
 

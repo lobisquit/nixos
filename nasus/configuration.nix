@@ -110,7 +110,6 @@
   services.xmpp_server.enable = true;
   services.xmpp_telegram = {
     enable = true;
-    debug = true;
     image = "codeberg.org/slidge/slidgram:v0.5.0";
   };
   services.xmpp_irc.enable = true;
