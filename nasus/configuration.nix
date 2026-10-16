@@ -120,6 +120,6 @@
     cpuThreads = 4;
     model = "large-v3-turbo";
     modelDir = "/mnt/storage_drive/xmpp/transcriber_bot";
-    initialPrompt = "Ciao Enrico ed Erika, fatemi sapere cosa ne pensate!";
+    initialPrompt = "Hello Enrico ed Erika, fatemi sapere cosa ne pensate!";
   };
 }
