@@ -15,8 +15,9 @@
       ./mail_downloader.nix
       ./cal_card_downloader.nix
       ./xmpp_server.nix
-      ./xmpp_telegram.nix
       ./xmpp_irc.nix
+      ./xmpp_telegram.nix
+      ./xmpp_transcriber_bot.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -113,4 +114,13 @@
     image = "codeberg.org/slidge/slidgram:v0.5.0";
   };
   services.xmpp_irc.enable = true;
+
+  services.xmpp_transcriber_bot = {
+    enable = true;
+    language = "it";
+    cpuThreads = 4;
+    model = "large-v3-turbo";
+    modelDir = "/mnt/storage_drive/xmpp/transcriber_bot";
+    initialPrompt = "Ciao Enrico ed Erika, fatemi sapere cosa ne pensate!";
+  };
 }
