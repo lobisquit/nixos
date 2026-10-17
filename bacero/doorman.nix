@@ -9,7 +9,8 @@ let
 
   pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ps.pyserial
-    ps.requests
+    ps.slixmpp
+    ps.aiohttp # needed by slixmpp for file uploads
   ]);
 
 in
@@ -34,6 +35,24 @@ in
     ttyDoorman = lib.mkOption {
       type = lib.types.str;
       default = "ttyDOORMAN";
+    };
+
+    xmppJid = lib.mkOption {
+      type = lib.types.str;
+      default = "doorman@lovisotto.it";
+      description = "XMPP account used to send the recordings.";
+    };
+
+    xmppRoom = lib.mkOption {
+      type = lib.types.str;
+      default = "doorman@conference.lovisotto.it";
+      description = "Group chat where the recordings are sent.";
+    };
+
+    xmppNick = lib.mkOption {
+      type = lib.types.str;
+      default = "doorman";
+      description = "Nickname shown in the group chat.";
     };
   };
 
@@ -88,6 +107,9 @@ in
         Environment = [
           "SERIAL_DEV=/dev/${cfg.ttyDoorman}"
           "TMP_PATH=${config.users.users.doorman.home}"
+          "XMPP_JID=${cfg.xmppJid}"
+          "XMPP_ROOM=${cfg.xmppRoom}"
+          "XMPP_NICK=${cfg.xmppNick}"
         ];
         Restart = "always";
         RestartSec = "5s";
