@@ -17,6 +17,7 @@
       ./xmpp_irc.nix
       ./xmpp_telegram.nix
       ./xmpp_transcriber_bot.nix
+      ./xmpp_mail_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -160,4 +161,6 @@
     modelDir = "/mnt/storage_drive/xmpp/transcriber_bot";
     initialPrompt = "Hello Enrico ed Erika, fatemi sapere cosa ne pensate!";
   };
+
+  services.xmpp_mail_notifier.enable = true;
 }
