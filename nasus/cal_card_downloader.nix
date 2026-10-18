@@ -60,12 +60,12 @@ in
         # `yes | vdirsyncer discover` before every sync: needed after a
         # change of the configuration, and creates missing local folders
         forceDiscover = true;
-        timerConfig = {
-          OnCalendar = "*-*-* 00/6:00:00";
-          RandomizedDelaySec = "30m";
-        };
       };
     };
+
+    # The module always creates a timer: sync only before the backups,
+    # which pull in the unit (see runBefore below)
+    systemd.timers.${unit}.enable = false;
 
     # Additions to the unit of the nixpkgs module
     systemd.services.${unit} = {
