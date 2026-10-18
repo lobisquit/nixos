@@ -128,7 +128,7 @@
 
   services.cal_card_downloader = {
     enable = true;
-    davDir = "/mnt/storage_drive/cal_card"; # collections listed in the secrets
+    davDir = "/mnt/storage_drive/cal_card";
   };
 
   services.navidrome_wrapper = {
