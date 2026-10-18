@@ -10,6 +10,7 @@ in
   imports =
     [
       ./sshd_wrapper.nix
+      ./backupper.nix
     ];
 
   options.services.sftpd_storage = {
@@ -32,6 +33,16 @@ in
     data_directory = lib.mkOption {
       type = lib.types.path;
       default = "/var/lib/sftp_storage/data";
+    };
+
+    backup_folders = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ "Documenti" "Immagini" "Musica" "Video" ];
+      description = ''
+        Folders of data_directory to back up, each one as a backupper
+        source named and tagged after the folder. The host chooses the
+        repositories of each folder.
+      '';
     };
   };
 
@@ -79,6 +90,13 @@ in
     '';
 
     systemd.services.sshd.requires = [ "storage-set-permissions.service" ];
+
+    # The readonly group can read every folder thanks to the ACLs set by
+    # storage-set-permissions.
+    services.backupper.sources = lib.genAttrs cfg.backup_folders (folder: {
+      paths = [ "${cfg.data_directory}/${folder}" ];
+      groups = [ cfg.readonly_group ];
+    });
 
     systemd.tmpfiles.rules = [
       "d ${dirOf cfg.data_directory} 0755 root root -"

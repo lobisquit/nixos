@@ -74,7 +74,6 @@
   };
   services.backupper = {
     enable = true;
-    group = "readonly_storage";
 
     repositories.remote.startAt = "*-*-* 03:00:00";
     repositories.local = {
@@ -82,16 +81,17 @@
       requires = [ "mnt-backup_hdd.mount" ];
     };
 
-    sources =
-      let data = config.services.sftpd_storage.data_directory;
-      in lib.genAttrs [ "Documenti" "Immagini" "Musica" "Video" ] (folder: {
-        paths = [ "${data}/${folder}" ];
-        repositories = if folder == "Documenti" then [ "remote" "local" ] else [ "local" ];
-      }) // {
-        # declared by xmpp_server.nix
-        prosody.repositories = [ "remote" "local" ];
-        prosody_uploads.repositories = [ "local" ];
-      };
+    sources = {
+      # declared by sftpd_storage.nix
+      Documenti.repositories = [ "remote" "local" ];
+      Immagini.repositories = [ "local" ];
+      Musica.repositories = [ "local" ];
+      Video.repositories = [ "local" ];
+
+      # declared by xmpp_server.nix
+      prosody.repositories = [ "remote" "local" ];
+      prosody_uploads.repositories = [ "local" ];
+    };
   };
 
   # External exFAT drive for the local backup, mounted only while it runs
