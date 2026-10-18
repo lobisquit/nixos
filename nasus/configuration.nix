@@ -1,4 +1,4 @@
-{ inputs, outputs, libs, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, ... }:
 
 {
   imports =
@@ -74,8 +74,35 @@
   };
   services.backupper = {
     enable = true;
-    data_directory = config.services.sftpd_storage.data_directory;
+    group = "readonly_storage";
+
+    repositories.remote.startAt = "*-*-* 03:00:00";
+    repositories.local = {
+      localPath = "/mnt/backup_hdd/home/restic-repo";
+      requires = [ "mnt-backup_hdd.mount" ];
+    };
+
+    sources =
+      let data = config.services.sftpd_storage.data_directory;
+      in lib.genAttrs [ "Documenti" "Immagini" "Musica" "Video" ] (folder: {
+        paths = [ "${data}/${folder}" ];
+        repositories = if folder == "Documenti" then [ "remote" "local" ] else [ "local" ];
+      }) // {
+        # declared by xmpp_server.nix
+        prosody.repositories = [ "remote" "local" ];
+        prosody_uploads.repositories = [ "local" ];
+      };
   };
+
+  # External exFAT drive for the local backup, mounted only while it runs
+  systemd.mounts = [{
+    type = "exfat";
+    mountConfig.Options = "defaults,uid=${toString config.users.users.backupper.uid}";
+    bindsTo = [ "backup_local.service" ];
+    what = "/dev/disk/by-uuid/FA3D-8377";
+    where = "/mnt/backup_hdd";
+  }];
+  systemd.services.backup_local.preStart = "sleep 5";
 
   services.telegram_reminder.enable = false;
 

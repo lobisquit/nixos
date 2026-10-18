@@ -6,8 +6,12 @@ let
   domain = cfg.domain;
   certDir = config.security.acme.certs.${domain}.directory;
   prosodyDir = "${cfg.storageDir}/prosody";
+  # where mod_http_file_share keeps the uploaded files (Prosody default)
+  uploadsDir = "${prosodyDir}/http_file_share";
 in
 {
+  imports = [ ./backupper.nix ];
+
   options.services.xmpp_server = {
     enable = lib.mkEnableOption "the Prosody XMPP server";
 
@@ -104,7 +108,27 @@ in
     systemd.tmpfiles.rules = [
       "d ${cfg.storageDir} 0755 root root - -"
       "d ${prosodyDir} 0750 prosody prosody - -"
+      "d ${uploadsDir} 0750 prosody prosody - -"
     ];
+
+    # Backups, split in two sources so that the host can send the
+    # uploaded media (up to 1 GiB per user per day, expiring after
+    # 3 months) only to some repositories. Repositories are chosen by
+    # the host.
+    services.backupper.sources = {
+      # accounts, rosters, message archives, group chats
+      prosody = {
+        paths = [ prosodyDir ];
+        exclude = [ uploadsDir ];
+        groups = [ "prosody" ];
+      };
+
+      # files and images shared in chats
+      prosody_uploads = {
+        paths = [ uploadsDir ];
+        groups = [ "prosody" ];
+      };
+    };
 
     # Wait for the drive to be mounted, and allow writing there even if
     # the service is sandboxed.

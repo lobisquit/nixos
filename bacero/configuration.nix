@@ -89,7 +89,12 @@ in
 
   services.miniflux_wrapper.enable = true;
 
-  services.backupper.enable = true;
+  services.backupper = {
+    enable = true;
+    repositories.remote.startAt = "*-*-* 03:00:00";
+    # declared by miniflux_wrapper.nix
+    sources.miniflux.repositories = [ "remote" ];
+  };
 
   services.doorman.enable = true;
   services.beancount_bot.enable = true;

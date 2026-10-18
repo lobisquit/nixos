@@ -8,7 +8,7 @@ let
 in
 
 {
-  imports = [ ./nginx_wrapper.nix ];
+  imports = [ ./nginx_wrapper.nix ./backupper.nix ];
 
   options.services.miniflux_wrapper = {
 
@@ -118,6 +118,15 @@ in
           pg_dump miniflux \
               > "${cfg.backupFolder}/postgres_miniflux.sql"
       '';
+    };
+
+    # The full database, for a complete restore, and the OPML list of
+    # feeds, for easy imports into other apps. Repositories are chosen
+    # by the host.
+    services.backupper.sources.miniflux = {
+      paths = [ cfg.backupFolder ];
+      groups = [ cfg.backupGroup ];
+      runBefore = [ "miniflux_backup_admin_opml.service" ];
     };
   };
 }
