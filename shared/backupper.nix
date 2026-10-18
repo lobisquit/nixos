@@ -21,6 +21,10 @@ let
 
   enabledSources = lib.filterAttrs (_: s: s.enable) cfg.sources;
 
+  # systemd expands specifiers like %h in paths and environment values,
+  # so a literal % (Prosody encodes dots as %2e) must be written as %%
+  escapeUnit = lib.replaceStrings [ "%" ] [ "%%" ];
+
   sourceModule = { name, ... }: {
     options = {
       enable = mkOption {
@@ -168,8 +172,8 @@ let
         ExecStart = mkScript repoName repo;
 
         EnvironmentFile = [ secrets.${repo.secret}.path ];
-        Environment = [ "RESTIC_CACHE_DIR=${cacheDir}" ]
-          ++ lib.optional isLocal "RESTIC_REPOSITORY=${repo.localPath}";
+        Environment = map escapeUnit ([ "RESTIC_CACHE_DIR=${cacheDir}" ]
+          ++ lib.optional isLocal "RESTIC_REPOSITORY=${repo.localPath}");
 
         # Empty, read-only root: the only things visible are the bind
         # mounts below. The sops secret is read by systemd through
@@ -180,19 +184,19 @@ let
 
         # Read-only: the Nix store, the files restic needs to run and
         # exactly the folders of the sources sent to this repository.
-        BindReadOnlyPaths = [
+        BindReadOnlyPaths = map escapeUnit ([
           "/nix/store"
           "/etc/passwd" # restic stores the user name in each snapshot
         ] ++ lib.optionals (!isLocal) [
           "/etc/resolv.conf"
           "/etc/ssl/certs/ca-certificates.crt"
-        ] ++ paths;
+        ] ++ paths);
 
         # Excluded folders are not even readable ("-": ignore if missing).
-        InaccessiblePaths = map (p: "-${p}") hidden;
+        InaccessiblePaths = map (p: "-${escapeUnit p}") hidden;
 
         # Read-write: only the restic cache and, if local, the repository.
-        BindPaths = [ cacheDir ] ++ lib.optional isLocal repo.localPath;
+        BindPaths = map escapeUnit ([ cacheDir ] ++ lib.optional isLocal repo.localPath);
 
         # Network only for remote repositories.
         PrivateNetwork = isLocal;

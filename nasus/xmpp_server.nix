@@ -6,8 +6,11 @@ let
   domain = cfg.domain;
   certDir = config.security.acme.certs.${domain}.directory;
   prosodyDir = "${cfg.storageDir}/prosody";
-  # where mod_http_file_share keeps the uploaded files (Prosody default)
-  uploadsDir = "${prosodyDir}/http_file_share";
+  # Prosody keeps the data of each host in a folder named after it, with
+  # non-alphanumeric characters percent-encoded (upload.lovisotto.it ->
+  # upload%2elovisotto%2eit): for the upload component, the shared files.
+  prosodyHostDir = host: "${prosodyDir}/${lib.replaceStrings [ "." "-" "_" ] [ "%2e" "%2d" "%5f" ] host}";
+  uploadsDir = prosodyHostDir config.services.prosody.httpFileShare.domain;
 in
 {
   imports = [ ./backupper.nix ];
@@ -108,7 +111,6 @@ in
     systemd.tmpfiles.rules = [
       "d ${cfg.storageDir} 0755 root root - -"
       "d ${prosodyDir} 0750 prosody prosody - -"
-      "d ${uploadsDir} 0750 prosody prosody - -"
     ];
 
     # Backups, split in two sources so that the host can send the
