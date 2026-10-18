@@ -16,18 +16,38 @@ in
 
       davDir = mkOption {
         type = types.path;
-        default = "/mnt/data/";
+        default = "/var/lib/cal_card_downloader/dav";
+        description = ''
+          Folder where calendars and contacts are downloaded (local paths
+          in the configuration secret are relative to it), also backed up
+          as the `cal_card` source.
+        '';
       };
     };
   };
 
+  imports = [ ./backupper.nix ];
+
   config = mkIf cfg.enable {
-    users.groups.storage = {};
+    users.groups.cal_card_downloader = {};
     users.users.cal_card_downloader = {
       createHome = true;
       home = "/var/lib/cal_card_downloader/";
       isSystemUser = true;
-      group = config.users.groups.storage.name;
+      group = config.users.groups.cal_card_downloader.name;
+    };
+
+    systemd.tmpfiles.rules = [
+      "d ${cfg.davDir} 0750 cal_card_downloader cal_card_downloader - -"
+      # fix the owner of files moved here from elsewhere
+      "Z ${cfg.davDir} - cal_card_downloader cal_card_downloader - -"
+    ];
+
+    # Repositories are chosen by the host
+    services.backupper.sources.cal_card = {
+      paths = [ cfg.davDir ];
+      groups = [ config.users.groups.cal_card_downloader.name ];
+      runBefore = [ "cal_card_downloader.service" ];
     };
 
     sops.secrets.cal_card_downloader_credentials = {
@@ -46,8 +66,7 @@ in
       description = "Sync DAV calendars and contacts to local folders";
 
       after = [ "network.target" ];
-      wantedBy = [ "backup_remote.service" "backup_local.service" ];
-      before = [ "backup_remote.service" "backup_local.service" ];
+      unitConfig.RequiresMountsFor = [ cfg.davDir ];
       serviceConfig = {
         User = config.users.users.cal_card_downloader.name;
         Group = config.users.users.cal_card_downloader.group;
@@ -56,9 +75,9 @@ in
         TemporaryFileSystem = "/";
         BindPaths = [
           config.users.users.cal_card_downloader.home
-          # depends on secret configurations
-          "${cfg.davDir}/Contatti"
-          "${cfg.davDir}/Calendario"
+          # the folder is dedicated to the downloads, whatever subfolders
+          # the secret configuration uses
+          cfg.davDir
         ];
         BindReadOnlyPaths = [
           "/etc/resolv.conf"

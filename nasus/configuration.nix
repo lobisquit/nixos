@@ -88,6 +88,10 @@
       Musica.repositories = [ "local" ];
       Video.repositories = [ "local" ];
 
+      # declared by mail_downloader.nix and cal_card_downloader.nix
+      mail.repositories = [ "remote" "local" ];
+      cal_card.repositories = [ "remote" "local" ];
+
       # declared by xmpp_server.nix
       prosody.repositories = [ "remote" "local" ];
       prosody_uploads.repositories = [ "local" ];
@@ -119,12 +123,12 @@
 
   services.mail_downloader = {
     enable = true;
-    mailDir = "${config.services.sftpd_storage.data_directory}/Documenti/Mail";
+    mailDir = "/mnt/storage_drive/mail";
   };
 
   services.cal_card_downloader = {
     enable = true;
-    davDir = "${config.services.sftpd_storage.data_directory}/Documenti";
+    davDir = "/mnt/storage_drive/cal_card";
   };
 
   services.navidrome_wrapper = {
