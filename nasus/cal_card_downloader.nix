@@ -1,35 +1,52 @@
-{ config, lib, options, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
-with lib;
+# One-way mirror of calendars and address books to local folders, with
+# vdirsyncer: every collection becomes a folder with one file per event
+# or contact. Remote sources are read-only and a failed sync never
+# touches the files already downloaded. See cal_card_downloader.py.
+#
+# Everything about the collections lives in the host sops file:
+#
+#   cal_card_downloader:
+#     username: ...          # for the CalDAV/CardDAV collections
+#     password: ...
+#     collections: |
+#       caldav<TAB>Calendario/Personale<TAB>https://...
+#       carddav<TAB>Contatti/Rubrica<TAB>https://...
+#       ics<TAB>Calendario/Abbonamento<TAB>https://...
 
 let
   cfg = config.services.cal_card_downloader;
   secrets = config.sops.secrets;
+  user = config.users.users.cal_card_downloader;
+
+  secretNames = map (key: "cal_card_downloader/${key}") [ "username" "password" "collections" ];
+  secretPath = key: secrets."cal_card_downloader/${key}".path;
 in
 {
-  options = {
-    services.cal_card_downloader = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-      };
+  options.services.cal_card_downloader = {
+    enable = lib.mkEnableOption "the download of calendars and contacts";
 
-      davDir = mkOption {
-        type = types.path;
-        default = "/var/lib/cal_card_downloader/dav";
-        description = ''
-          Folder where calendars and contacts are downloaded (local paths
-          in the configuration secret are relative to it), also backed up
-          as the `cal_card` source.
-        '';
-      };
+    davDir = lib.mkOption {
+      type = lib.types.path;
+      default = "/var/lib/cal_card_downloader/dav";
+      description = ''
+        Base folder of the downloads (the folders of the collections are
+        relative to it), also backed up as the `cal_card` source.
+      '';
+    };
+
+    startAt = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Also sync on a schedule; the backups pull in a sync anyway.";
     };
   };
 
   imports = [ ./backupper.nix ];
 
-  config = mkIf cfg.enable {
-    users.groups.cal_card_downloader = {};
+  config = lib.mkIf cfg.enable {
+    users.groups.cal_card_downloader = { };
     users.users.cal_card_downloader = {
       createHome = true;
       home = "/var/lib/cal_card_downloader/";
@@ -37,10 +54,14 @@ in
       group = config.users.groups.cal_card_downloader.name;
     };
 
+    sops.secrets = lib.genAttrs secretNames (_: {
+      mode = "0400";
+      owner = user.name;
+      group = user.group;
+    });
+
     systemd.tmpfiles.rules = [
       "d ${cfg.davDir} 0750 cal_card_downloader cal_card_downloader - -"
-      # fix the owner of files moved here from elsewhere
-      "Z ${cfg.davDir} - cal_card_downloader cal_card_downloader - -"
     ];
 
     # Repositories are chosen by the host
@@ -50,115 +71,54 @@ in
       runBefore = [ "cal_card_downloader.service" ];
     };
 
-    sops.secrets.cal_card_downloader_credentials = {
-      mode = "0400";
-      owner = config.users.users.cal_card_downloader.name;
-      group = config.users.users.cal_card_downloader.group;
-    };
-
-    sops.secrets.cal_card_downloader_configuration = {
-      mode = "0400";
-      owner = config.users.users.cal_card_downloader.name;
-      group = config.users.users.cal_card_downloader.group;
-    };
-
     systemd.services.cal_card_downloader = {
       description = "Sync DAV calendars and contacts to local folders";
 
-      after = [ "network.target" ];
+      wants = [ "network-online.target" ];
+      after = [ "network-online.target" ];
       unitConfig.RequiresMountsFor = [ cfg.davDir ];
-      serviceConfig = {
-        User = config.users.users.cal_card_downloader.name;
-        Group = config.users.users.cal_card_downloader.group;
-        Type = "oneshot";
+      startAt = lib.optional (cfg.startAt != null) cfg.startAt;
 
-        TemporaryFileSystem = "/";
-        BindPaths = [
-          config.users.users.cal_card_downloader.home
-          # the folder is dedicated to the downloads, whatever subfolders
-          # the secret configuration uses
-          cfg.davDir
-        ];
-        BindReadOnlyPaths = [
-          "/etc/resolv.conf"
-          "/etc/ssl/certs/ca-certificates.crt"
-          "/nix/store"
-          secrets.cal_card_downloader_credentials.path
-          secrets.cal_card_downloader_configuration.path
-        ];
+      environment = {
+        DAV_DIR = cfg.davDir;
+        STATE_DIR = user.home;
+        COLLECTIONS_FILE = secretPath "collections";
+        USERNAME_FILE = secretPath "username";
+        PASSWORD_FILE = secretPath "password";
+        SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+        PYTHONUNBUFFERED = "1"; # keep the log lines in order
       };
 
-      path = with pkgs; [ cadaver curl ];
+      path = [ pkgs.vdirsyncer ];
 
-      script = ''
-        #!/bin/bash
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.python3}/bin/python3 ${./cal_card_downloader.py}";
+        User = user.name;
+        Group = user.group;
+        # new files readable by the group, hence by the backup
+        UMask = "0027";
 
-        set -e
+        TemporaryFileSystem = "/:ro";
+        PrivateTmp = true;
+        BindPaths = [ user.home cfg.davDir ];
+        BindReadOnlyPaths = [
+          "/nix/store"
+          "/etc/resolv.conf"
+          "/etc/ssl/certs/ca-certificates.crt"
+        ] ++ map (name: secrets.${name}.path) secretNames;
 
-        function dav_download() {
-            local_subfolder="$1"
-            remote_url="$2"
-
-            # cleanup and re-download all files since no timestamp
-            # for DAV files is available anyway
-            rm -rf "$local_subfolder"
-            mkdir -p "$local_subfolder"
-
-            cd "$local_subfolder"
-            echo 'mget *' | cadaver "$remote_url" 2>&1 > ~/log.txt
-            cat ~/log.txt
-
-            # assign write permission to new files to the group as well
-            # no matter if cadaver failed
-            find . -type f -exec chmod 660 {} \;
-            find . -type d -exec chmod 770 {} \;
-
-            # Unfortunately cadaver does not propagate the error code of its commands to shell.
-            # This is a workaround grepping for errors.
-            cat ~/log.txt \
-                | grep 'Host not found\|Could not open collection\|Unrecognised command\|Could not access' \
-              && exit 1
-
-            echo "DAV <$local_subfolder> processed successfully"
-        }
-
-        function ics_download() {
-            local_path="$1"
-            remote_url="$2"
-
-            mkdir -p $(dirname "$local_path")
-            rm -f "''${local_path}.ics"
-            curl "$remote_url" -o "''${local_path}.ics"
-
-            # assign write permission to the new file to the group as well
-            chmod 660 "''${local_path}.ics"
-
-            echo "ICS <$local_path> processed successfully"
-        }
-
-        rm -f $HOME/.netrc
-        ln -s ${secrets.cal_card_downloader_credentials.path} $HOME/.netrc
-
-        while IFS=$'\t' read -r -a single_conf
-        do
-            cd ${cfg.davDir}
-
-            resource_type="''${single_conf[0]}"
-            local_path="''${single_conf[1]}"
-            remote_url="''${single_conf[2]}"
-
-            if [ "$resource_type" == "DAV" ]
-            then
-                dav_download "$local_path" "$remote_url"
-            elif [ "$resource_type" == "ICS" ]
-            then
-                ics_download "$local_path" "$remote_url"
-            else
-                echo "Invalid resource type: $resource_type"
-                exit 1
-            fi
-        done < ${secrets.cal_card_downloader_configuration.path}
-      '';
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        PrivateDevices = true;
+        ProtectKernelTunables = true;
+        ProtectKernelModules = true;
+        ProtectControlGroups = true;
+        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+        RestrictNamespaces = true;
+        LockPersonality = true;
+        SystemCallArchitectures = "native";
+      };
     };
   };
 }
