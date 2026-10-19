@@ -40,6 +40,10 @@ exec nix --extra-experimental-features 'nix-command flakes' eval --raw \
 - pip funziona: per provare vdirsyncer si può usare un venv con `vdirsyncer==0.20.0` e `radicale`
   come server CalDAV/CardDAV locale (+ `python3 -m http.server` per gli ICS).
   Attenzione: `pkill -f <pattern>` nella stessa riga di comando uccide la shell stessa; usare i PID.
+- apt funziona: `apt-get install isync dovecot-imapd` dà mbsync 1.4 (nixpkgs ha 1.5: `SSLType` →
+  `TLSType`) e un server IMAP di prova. Dovecot non può usare uid 0 né percorsi dentro `/tmp/claude-0`
+  (0700, socket con nome troppo lungo): server in `/srv/...` con un utente dedicato; in chiaro serve
+  `AuthMechs LOGIN` nella configurazione di mbsync.
 
 ## 2. Struttura
 
@@ -79,7 +83,15 @@ shared/                  moduli comuni: backupper.nix, backlight_off.nix, nginx_
   ACL via `storage-set-permissions.service` (gruppo `readonly_storage` in sola lettura).
   Opzione `backup_folders` (default `Documenti Immagini Musica Video`): ognuna è una sorgente di backup.
 - `backupper`: vedi §4.
-- `mail_downloader` (offlineimap) → `/mnt/storage_drive/mail`, gruppo proprio, sorgente `mail`.
+- `mail_downloader` (mbsync/isync, PR #2) → `/mnt/storage_drive/mail`, gruppo proprio, sorgente `mail`.
+  L'intera configurazione mbsync è il secret `mail_downloader_mbsync`: per account `IMAPAccount` +
+  `IMAPStore` + `MaildirStore` + `Channel` con `Sync Pull`, `Create Near`, `Expunge Near`,
+  `CopyArrivalDate yes` e **un prefisso `SyncState` per account** (`/var/lib/mail_downloader/state/<account>-`:
+  i file di stato hanno il nome della cartella, due account con cartelle omonime si scontrano).
+  Le cartelle `Path` dei `MaildirStore` vanno create a mano. mbsync crea file 0600 ignorando la
+  umask: `ExecStopPost` li rende leggibili al gruppo. Aggiunge un header `X-TUID`; salta (con warning
+  `skipping`, uscita 0) le mail senza riga vuota tra header e corpo. Gmail: escludere
+  `"[Gmail]/All Mail"` (tra virgolette, `?` non è un jolly) per evitare duplicati.
 - `cal_card_downloader` → `/mnt/storage_drive/cal_card`, sorgente `cal_card`. Usa il modulo nixpkgs
   `services.vdirsyncer` (unit `vdirsyncer@cal_card`, **timer disattivato**: parte solo prima dei backup).
   L'intera configurazione vdirsyncer (INI, valori JSON) è il secret `cal_card_downloader_vdirsyncer`:
@@ -170,7 +182,8 @@ Claude non può decifrarli: per un nuovo secret, dichiararlo nel modulo e dire a
 aggiungerlo con `sops <host>/secrets.yaml` **prima** del deploy (una chiave mancante fa fallire
 l'attivazione). Chiavi admin: lobisquit-pc, minipc-enrico, padel1 (telefono Termux).
 - **nasus**: restic_remote/local_configuration, alertmanager_credentials, healthchecks_io_environment,
-  transmission_credentials, smbpasswd, offlineimap_configuration, cal_card_downloader_vdirsyncer,
+  transmission_credentials, smbpasswd, mail_downloader_mbsync (prima offlineimap_configuration),
+  cal_card_downloader_vdirsyncer,
   desec_token, slidgram_secret, telegram_api_id, telegram_api_hash, biboumi_secret,
   transcriber_bot_password (+ inutilizzati: telegram_reminder_environment, filebrowser_secret_environment)
 - **bacero**: alertmanager_credentials, healthchecks_io_environment, podcasts_fetcher_*,
