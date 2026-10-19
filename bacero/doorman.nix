@@ -93,6 +93,7 @@ in
 
       path = with pkgs; [
         ffmpeg
+        util-linux # ionice
         pulseaudio
         alsa-utils
         pythonEnv

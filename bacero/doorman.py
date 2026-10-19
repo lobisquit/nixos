@@ -13,15 +13,30 @@ import serial
 import slixmpp
 
 
-def env(name):
-    return os.environ[name]
+# all settings are read once, at startup: a missing one stops the script now
+SERIAL_DEV = os.environ['SERIAL_DEV']
+SERIAL_BAUD_RATE = int(os.environ['SERIAL_BAUD_RATE'])
+TMP_PATH = Path(os.environ['TMP_PATH'])
+RECORD_COMMAND = os.environ['RECORD_COMMAND']
+SEND_COMMAND = os.environ['SEND_COMMAND']
+REBOOT_COMMAND = os.environ['REBOOT_COMMAND']
+VIDEO_INTERFACE = os.environ['VIDEO_INTERFACE']
+AUDIO_INTERFACE = os.environ['AUDIO_INTERFACE']
+XMPP_JID = os.environ['XMPP_JID']
+XMPP_PASSWORD = os.environ['XMPP_PASSWORD'].strip()
+XMPP_ROOM = os.environ['XMPP_ROOM']
+XMPP_NICK = os.environ['XMPP_NICK']
+
+# run ffmpeg with the lowest CPU and disk priority, so that it
+# does not slow down the other services on the server
+FFMPEG = ['nice', '-n', '19', 'ionice', '-c', '3', 'ffmpeg']
 
 
 class VideoSender(slixmpp.ClientXMPP):
     """Short-lived XMPP client: join the room, upload the video, post its link."""
 
     def __init__(self, video_path):
-        super().__init__(env('XMPP_JID'), env('XMPP_PASSWORD').strip())
+        super().__init__(XMPP_JID, XMPP_PASSWORD)
         self.video_path = video_path
         self.sent = False
         self.register_plugin('xep_0030')  # service discovery (finds upload service)
@@ -33,12 +48,11 @@ class VideoSender(slixmpp.ClientXMPP):
 
     async def on_start(self, _event):
         try:
-            room = env('XMPP_ROOM')
             await self.plugin['xep_0045'].join_muc_wait(
-                room, env('XMPP_NICK'), maxstanzas=0, timeout=60)
+                XMPP_ROOM, XMPP_NICK, maxstanzas=0, timeout=60)
             url = await self.plugin['xep_0363'].upload_file(
                 self.video_path, timeout=600)
-            message = self.make_message(mto=room, mbody=url, mtype='groupchat')
+            message = self.make_message(mto=XMPP_ROOM, mbody=url, mtype='groupchat')
             message['oob']['url'] = url
             message.send()
             self.sent = True
@@ -60,7 +74,7 @@ def convert_and_send(jobs):
         recording_dir = jobs.get()
         try:
             subprocess.run([
-                'ffmpeg',
+                *FFMPEG,
                 '-y', # force overwrite
                 '-hide_banner',
                 '-loglevel', 'error',
@@ -93,12 +107,12 @@ def stop(process):
 
 
 if __name__ == '__main__':
-    print(f"Using {Path(env('TMP_PATH'))} as temporary directory")
+    print(f"Using {TMP_PATH} as temporary directory")
 
     jobs = queue.Queue()
     threading.Thread(target=convert_and_send, args=(jobs,), daemon=True).start()
 
-    with serial.Serial(env('SERIAL_DEV'), env('SERIAL_BAUD_RATE'), timeout=0) as ser:
+    with serial.Serial(SERIAL_DEV, SERIAL_BAUD_RATE, timeout=0) as ser:
         ser.setRTS(False)
         ser.setDTR(False)
 
@@ -121,7 +135,7 @@ if __name__ == '__main__':
             except serial.SerialException as ex:
                 # raise the exception if the serial device failed but
                 # it is still there
-                if Path(env('SERIAL_DEV')).exists():
+                if Path(SERIAL_DEV).exists():
                     raise ex
                 else:
                     print('Could not read command: serial device disappeared',
@@ -134,10 +148,7 @@ if __name__ == '__main__':
             command = next_byte.decode('ascii')
             print('Loaded command:', command, flush=True)
 
-            if command == env('RECORD_COMMAND'):
-                video_if = env('VIDEO_INTERFACE')
-                audio_if = env('AUDIO_INTERFACE')
-
+            if command == RECORD_COMMAND:
                 # discard a previous recording that was never sent
                 stop(audio_process)
                 stop(video_process)
@@ -146,42 +157,42 @@ if __name__ == '__main__':
 
                 # each recording has its own folder, so a new one can start
                 # while the previous one is still being converted and sent
-                recording_dir = Path(tempfile.mkdtemp(dir=env('TMP_PATH')))
+                recording_dir = Path(tempfile.mkdtemp(dir=TMP_PATH))
 
                 print('Started recording', flush=True)
                 subprocess.run(['amixer', 'set', 'Capture', 'cap'])
                 subprocess.run(['amixer', '-M', 'set', 'Capture', '15%'])
 
                 audio_process = subprocess.Popen([
-                    'ffmpeg',
+                    *FFMPEG,
                     '-y', # force overwrite
                     '-hide_banner',
                     '-loglevel', 'error',
                     '-f', 'pulse',
-                    '-i', audio_if,
+                    '-i', AUDIO_INTERFACE,
                     '-t', '00:10:00',
                     recording_dir / 'audio.mp3'
                 ])
 
                 video_process = subprocess.Popen([
-                    'ffmpeg',
+                    *FFMPEG,
                     '-y', # force overwrite
                     '-hide_banner',
                     '-loglevel', 'error',
                     '-f', 'v4l2',
-                    '-i', video_if,
+                    '-i', VIDEO_INTERFACE,
                     '-t', '00:10:00',
                     recording_dir / 'video.mp4'
                 ])
 
-            if command == env('REBOOT_COMMAND'):
+            if command == REBOOT_COMMAND:
                 stop(audio_process)
                 stop(video_process)
 
                 audio_process = None
                 video_process = None
 
-            if command == env('SEND_COMMAND') and recording_dir:
+            if command == SEND_COMMAND and recording_dir:
                 stop(audio_process)
                 stop(video_process)
 
