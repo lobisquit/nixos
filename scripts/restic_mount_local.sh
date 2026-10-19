@@ -5,7 +5,7 @@
 #
 # The disk itself is mounted automatically, read-only, on /mnt/backup_hdd
 # (lobisquit-pc/backup_hdd.nix). The password comes from
-# admin/restic_b2_admin.yaml, decrypted locally with sops: its
+# admin/restic.yaml, decrypted locally with sops: its
 # restic_local_environment must define RESTIC_PASSWORD.
 #
 # usage: scripts/restic_mount_local.sh [extra restic mount args]
@@ -29,10 +29,10 @@ fi
 # Nothing is written to disk: the password goes straight into the environment
 set -a
 # shellcheck disable=SC1090
-source <(sops -d --extract '["restic_local_environment"]' admin/restic_b2_admin.yaml)
+source <(sops -d --extract '["restic_local_environment"]' admin/restic.yaml)
 set +a
 if [ -z "${RESTIC_PASSWORD:-}" ]; then
-    echo "RESTIC_PASSWORD is missing in admin/restic_b2_admin.yaml (restic_local_environment)" >&2
+    echo "RESTIC_PASSWORD is missing in admin/restic.yaml (restic_local_environment)" >&2
     exit 1
 fi
 export RESTIC_REPOSITORY="$REPOSITORY"

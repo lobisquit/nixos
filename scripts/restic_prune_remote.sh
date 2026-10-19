@@ -7,7 +7,7 @@
 # erase its backups. Forgetting and pruning old snapshots needs the admin
 # key.
 #
-# Everything comes from admin/restic_b2_admin.yaml, decrypted locally with
+# Everything comes from admin/restic.yaml, decrypted locally with
 # sops: no server and no host configuration is involved. Its
 # restic_b2_admin_environment must define
 #   RESTIC_REPOSITORY, RESTIC_PASSWORD,
@@ -31,12 +31,12 @@ fi
 # Nothing is written to disk: secrets go straight into the environment
 set -a
 # shellcheck disable=SC1090
-source <(sops -d --extract '["restic_b2_admin_environment"]' admin/restic_b2_admin.yaml)
+source <(sops -d --extract '["restic_b2_admin_environment"]' admin/restic.yaml)
 set +a
 
 for var in RESTIC_REPOSITORY RESTIC_PASSWORD AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
     if [ -z "${!var:-}" ]; then
-        echo "$var is missing in admin/restic_b2_admin.yaml (restic_b2_admin_environment)" >&2
+        echo "$var is missing in admin/restic.yaml (restic_b2_admin_environment)" >&2
         exit 1
     fi
 done
