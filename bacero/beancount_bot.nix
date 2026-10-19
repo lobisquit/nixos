@@ -45,6 +45,10 @@ in
       after = [ "network.target" ];
       wantedBy = [ "default.target" ];
 
+      # restart limits belong to [Unit], not [Service]
+      startLimitIntervalSec = 60;
+      startLimitBurst = 5;
+
       serviceConfig = {
         User = config.users.users.beancount_bot.name;
         Group = config.users.users.beancount_bot.group;
@@ -52,8 +56,6 @@ in
         WorkingDirectory = "${./beancount_bot}";
         Restart = "always";
         RestartSec = "5s";
-        StartLimitIntervalSec = 60;
-        StartLimitBurst = 5;
         PrivateTmp = true;
         InaccessiblePaths = [
           "/home"

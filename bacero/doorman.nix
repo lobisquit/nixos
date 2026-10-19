@@ -100,6 +100,10 @@ in
 
       script = "python ${./doorman.py}";
 
+      # restart limits belong to [Unit], not [Service]
+      startLimitIntervalSec = 60;
+      startLimitBurst = 5;
+
       serviceConfig = {
         User = config.users.users.doorman.name;
         PrivateTmp = true;
@@ -113,8 +117,6 @@ in
         ];
         Restart = "always";
         RestartSec = "5s";
-        StartLimitIntervalSec = 60;
-        StartLimitBurst = 5;
       };
     };
   };
