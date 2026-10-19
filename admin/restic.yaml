@@ -1,4 +1,5 @@
 restic_b2_admin_environment: ENC[AES256_GCM,data:lAN3CiKvKSfjCAczm42wV9v/bGvhvQMeHhRAgtd+3UcBiwzvPqQIocspVrToESxaVq2UO0M27qBVipS4Unfu4bEGW0nJdIT63JWni6tcY9YI88hp7yk4u0tcEPT3Zu1KtOqf7G5cKeS7u6TT2YLAUI2c9Fz9KqM8enjr0kFJW5Qgo6o5uuRFVg1z1IaZA0/lPZYKG8EmquvhTnjRr9RsNX6ZHxot4V2fiXpoBRQRr/zdUmv9LS7I2WQSg40xkUI42nTKaq4S75SO0o7CCMkF9R+xYLm6Kb3WrWluPad9hUINKM6+WboZywULBFP/6PiA0DS/,iv:s4QUzzDVdckXXmMt0wJ03EcmCXIkVteT0u8mxdapp30=,tag:OCBQIyliO2UdfwkeeSPGew==,type:str]
+restic_local_environment: ENC[AES256_GCM,data:1TEJGgZX6UYiF9lJtXYwiwDPK8QstaNTOoe5Qcv7EINLTjt3daSGOBmTlGkmow==,iv:azsswGMLxYoqoU69sOp5YzkYBe80j2gnAN3HplpTMrE=,tag:mr5W2V1iLWdan+QAzAgjEg==,type:str]
 sops:
     age:
         - enc: |
@@ -28,7 +29,7 @@ sops:
             nEb0xOk6rvPN+DQA6xZuvpo6YQfsPX37dIepZ5Boyof4GXJdnNubWw==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1pdf9j3rm4zdj2pzj9skhv5kyj3u74d80q9g2wmutyvq3ah00lctskhvct2
-    lastmodified: "2026-10-19T16:09:58Z"
-    mac: ENC[AES256_GCM,data:i/r6BNKAfy1Sbb3kpqHs8/B/2W6MoR/YfCgFNwudaIbxhTqQ4uPcI2aXZpC5moH/RScoS8MmzZDsLmSghEK29IN4acUUudx80XBS9wu0zi3gDjLGotmeVlEuxS756A3gAA+fx+VP09RBE4+/NilEtqkhIuiuJQ8WtMiTWJz6flg=,iv:8D+1CeifeQprNIIsVsllIEuYGQXOoDuB3dqhjo0iiV8=,tag:SieKGbEd0ir8wzZgukAh5w==,type:str]
+    lastmodified: "2026-10-19T16:58:04Z"
+    mac: ENC[AES256_GCM,data:GuMHjuX9yyFcB/M5VmjKo6jw92sqrwcNpq8ipQZFJzxLhgj23oRteZuUPtiA0aQA7hRhFcX/G5cIe9BqBsG4wq3ORTERfkhKgXOVne6/0/RCFbzx4OY9L1vf83z/NLTorRa37/S35eGX0F3WgtL8V5QR/qlNP0Iq588xjv2UQcM=,iv:ogT4q6t9/CsWtVJrooNPdh7oc9KlWzkOWcb73o85TCo=,tag:tzmd9hum8v2hcUAdqaw+Ag==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.3
