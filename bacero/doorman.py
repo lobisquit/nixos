@@ -46,18 +46,47 @@ class VideoSender(slixmpp.ClientXMPP):
         self.register_plugin('xep_0066')  # file links (OOB), shown inline by clients
         self.register_plugin('xep_0363')  # HTTP file upload
         self.add_event_handler('session_start', self.on_start)
-        self.add_event_handler('failed_auth', lambda _: self.disconnect())
+        self.add_event_handler('failed_auth', self.on_failed_auth)
+        # answers from the room: the echo of our message, or an error
+        self.url = None
+        self.room_reply = self.loop.create_future()
+        for event in ('groupchat_message', 'message_error', 'presence_error'):
+            self.add_event_handler(event, self.on_room_stanza)
+
+    def on_failed_auth(self, _event):
+        print('XMPP login failed: check XMPP_JID and XMPP_PASSWORD', flush=True)
+        self.disconnect()
+
+    def on_room_stanza(self, stanza):
+        if stanza['from'].bare != XMPP_ROOM or self.room_reply.done():
+            return
+        if stanza['type'] == 'error' or stanza['body'] == self.url:
+            self.room_reply.set_result(stanza)
 
     async def on_start(self, _event):
         try:
-            await self.plugin['xep_0045'].join_muc_wait(
-                XMPP_ROOM, XMPP_NICK, maxstanzas=0, timeout=60)
-            url = await self.plugin['xep_0363'].upload_file(
+            # join the room without waiting for it: the server handles our
+            # stanzas in order, so we are in the room before the message
+            join = self.make_presence(pto=f'{XMPP_ROOM}/{XMPP_NICK}')
+            join['muc_join']['history']['maxstanzas'] = '0'
+            join.send()
+
+            self.url = await self.plugin['xep_0363'].upload_file(
                 self.video_path, timeout=600)
-            message = self.make_message(mto=XMPP_ROOM, mbody=url, mtype='groupchat')
-            message['oob']['url'] = url
+            message = self.make_message(mto=XMPP_ROOM, mbody=self.url,
+                                        mtype='groupchat')
+            message['oob']['url'] = self.url
             message.send()
-            self.sent = True
+
+            # the room sends our message back once it is posted
+            reply = await asyncio.wait_for(self.room_reply, timeout=60)
+            if reply['type'] == 'error':
+                print('Room error:', reply['error']['condition'],
+                      reply['error']['text'], flush=True)
+            else:
+                self.sent = True
+        except Exception as ex:
+            print('XMPP error:', repr(ex), flush=True)
         finally:
             self.disconnect()
 
