@@ -34,16 +34,9 @@ clean-self:
 update:
 	nix flake update
 
-# Retention of the remote (B2) backups of all hosts, with the admin
-# credentials only (the hosts can only add snapshots): no server needs to
-# be reachable. Pass ARGS=--dry-run to see what would be removed.
 prune_remote:
 	scripts/restic_prune_remote.sh $(ARGS)
 
-# Browse the remote (B2) backups of all hosts, read-only, in a private
-# temporary folder of this PC, with the admin credentials only: no server
-# needs to be reachable. Ctrl-C unmounts. ARGS are passed to restic mount
-# (e.g. ARGS="--host nasus --tag Documenti").
 mount_remote:
 	scripts/restic_mount_remote.sh $(ARGS)
 
