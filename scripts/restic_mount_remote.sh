@@ -36,17 +36,34 @@ done
 # available, otherwise in /tmp; mktemp creates it with mode 0700
 mountpoint=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/restic-remote.XXXXXX")
 
+# Opens the folder in the file manager as soon as restic has mounted it;
+# runs in the background, and failing to open it is not a problem
+open_when_mounted() {
+    command -v xdg-open >/dev/null || return 0
+    for _ in $(seq 120); do
+        if mountpoint -q "$mountpoint"; then
+            setsid -f xdg-open "$mountpoint" </dev/null >/dev/null 2>&1 || true
+            return 0
+        fi
+        sleep 0.5
+    done
+}
+
 cleanup() {
-    # restic unmounts on Ctrl-C; this covers the other exits
-    fusermount3 -u "$mountpoint" 2>/dev/null || fusermount -u "$mountpoint" 2>/dev/null || true
+    [ -z "${opener:-}" ] || kill "$opener" 2>/dev/null || true
+    # restic unmounts on Ctrl-C; this covers the other exits (lazily, in
+    # case the file manager is still looking at the folder)
+    fusermount3 -uz "$mountpoint" 2>/dev/null || fusermount -uz "$mountpoint" 2>/dev/null || true
     rmdir "$mountpoint" 2>/dev/null || true
 }
 trap cleanup EXIT
 
 echo "Repository: $RESTIC_REPOSITORY"
 echo "Mounted on: $mountpoint   (hosts/, tags/, snapshots/, ...)"
-echo "Press Ctrl-C to unmount."
+echo "Press Ctrl-C to unmount (close the file manager window first)."
 echo
 
+open_when_mounted &
+opener=$!
 # --no-lock: browsing does not even write a lock file to the bucket
 restic mount --no-lock "$@" "$mountpoint"
