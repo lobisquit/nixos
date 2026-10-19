@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 # One-way mirror of calendars and address books to local folders, with
 # the vdirsyncer module of nixpkgs (unit vdirsyncer@cal_card).
@@ -17,6 +17,14 @@ let
   cfg = config.services.cal_card_downloader;
   secret = config.sops.secrets.cal_card_downloader_vdirsyncer;
   unit = "vdirsyncer@cal_card";
+
+  # vdirsyncer writes every file through tempfile.mkstemp, which creates
+  # it with mode 0600 whatever the umask: open files and folders to the
+  # group, hence to the backup
+  groupReadable = pkgs.writeShellScript "cal_card_downloader-permissions" ''
+    ${pkgs.findutils}/bin/find ${lib.escapeShellArg cfg.davDir} -type d ! -perm -g=rx -exec ${pkgs.coreutils}/bin/chmod g+rx {} +
+    ${pkgs.findutils}/bin/find ${lib.escapeShellArg cfg.davDir} -type f ! -perm -g=r -exec ${pkgs.coreutils}/bin/chmod g+r {} +
+  '';
 in
 {
   options.services.cal_card_downloader = {
@@ -75,8 +83,9 @@ in
       serviceConfig = {
         # the module sets ProtectSystem=strict
         ReadWritePaths = [ cfg.davDir ];
-        # new files readable by the group, hence by the backup
         UMask = "0027";
+        # also after a failed sync, for the files already downloaded
+        ExecStopPost = groupReadable;
       };
     };
 
