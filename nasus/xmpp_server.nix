@@ -71,6 +71,8 @@ in
       admins = cfg.admins;
       allowRegistration = false; # accounts are created with prosodyctl
 
+      s2sSecureAuth = true;
+
       ssl.cert = "${certDir}/fullchain.pem";
       ssl.key = "${certDir}/key.pem";
 
