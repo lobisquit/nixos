@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import queue
 import shutil
@@ -12,6 +13,7 @@ from pathlib import Path
 import serial
 import slixmpp
 
+logging.basicConfig(level=logging.INFO)
 
 # all settings are read once, at startup: a missing one stops the script now
 SERIAL_DEV = os.environ['SERIAL_DEV']
