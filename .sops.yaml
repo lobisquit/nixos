@@ -8,6 +8,14 @@ keys:
   - &minipc age1urvr4xewunkrhxjh8cfrn8rag6reh87p35h8d7nfelw0k9hepslqvgcylu
 
 creation_rules:
+  # Admin credentials (e.g. the B2 key that can delete backups): only the
+  # personal keys, never the servers
+  - path_regex: "admin/.*\\.yaml"
+    key_groups:
+      - age:
+        - *lobisquit-pc
+        - *minipc-enrico
+        - *padel1
   - path_regex: "lobisquit-pc/secrets.yaml"
     key_groups:
       - age:

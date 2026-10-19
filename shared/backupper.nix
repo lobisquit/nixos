@@ -113,6 +113,18 @@ let
         description = "Units strictly required by the repository, such as the mount of an external disk.";
       };
 
+      prune = mkOption {
+        type = types.bool;
+        default = true;
+        description = ''
+          Apply the retention policy (restic forget and prune) after the
+          backup. Turn it off for a repository whose credentials cannot
+          delete, such as a B2 key without deleteFiles: a compromised host
+          can then add snapshots but not remove them, and the retention is
+          applied from a trusted machine (scripts/restic_prune_remote.sh).
+        '';
+      };
+
       keep = mkOption {
         type = types.attrsOf types.int;
         # the single most recent snapshot of each of the last 7 days,
@@ -138,11 +150,10 @@ let
         ++ lib.concatMap (e: [ "--exclude" e ]) s.exclude
         ++ s.paths
       )}
+    '' + lib.optionalString repo.prune ''
       restic forget --verbose --tag ${lib.escapeShellArg s.tag} ${keepArgs repo.keep}
-
-    '') (sourcesFor repoName)}
-
-    restic prune --verbose
+    '' + "\n") (sourcesFor repoName)}
+    ${lib.optionalString repo.prune "restic prune --verbose"}
     restic check --verbose
   '';
 

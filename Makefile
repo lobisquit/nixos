@@ -34,6 +34,11 @@ clean-self:
 update:
 	nix flake update
 
+# Retention of the remote (B2) backups, with the admin key: the hosts can
+# only add snapshots. Pass ARGS=--dry-run to see what would be removed.
+prune_remote-%:
+	scripts/restic_prune_remote.sh $* $(ARGS)
+
 no-uncommitted-changes:
 	@git diff --quiet
 

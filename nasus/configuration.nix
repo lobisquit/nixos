@@ -74,7 +74,12 @@
   services.backupper = {
     enable = true;
 
-    repositories.remote.startAt = "*-*-* 03:00:00";
+    repositories.remote = {
+      startAt = "*-*-* 03:00:00";
+      # the B2 key of this host cannot delete: retention is applied
+      # from the PC with `make prune_remote-nasus`
+      prune = false;
+    };
     repositories.local = {
       localPath = "/mnt/backup_hdd/home/restic-repo";
       requires = [ "mnt-backup_hdd.mount" ];
