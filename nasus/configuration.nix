@@ -5,7 +5,6 @@
     [
       ./hardware-configuration.nix
       ./sftpd_storage.nix
-      ./telegram_reminder.nix
       ./backlight_off.nix
       ./backupper.nix
       ./monitoring.nix
@@ -107,8 +106,6 @@
     where = "/mnt/backup_hdd";
   }];
   systemd.services.backup_local.preStart = "sleep 5";
-
-  services.telegram_reminder.enable = false;
 
   services.monitoring.enable = true;
 
