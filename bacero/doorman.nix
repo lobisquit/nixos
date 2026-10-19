@@ -118,6 +118,36 @@ in
         ];
         Restart = "always";
         RestartSec = "5s";
+
+        # Sandbox: read-only system, writable only its home (recordings);
+        # devices limited to the serial board, the camera and the sound card.
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        ReadWritePaths = [ config.users.users.doorman.home ];
+        DevicePolicy = "closed";
+        DeviceAllow = [
+          "char-ttyUSB rw"       # board on /dev/${cfg.ttyDoorman} (CH340)
+          "char-video4linux rw"  # camera
+          "char-alsa rw"         # amixer
+        ];
+
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        ProtectKernelTunables = true;
+        ProtectKernelModules = true;
+        ProtectKernelLogs = true;
+        ProtectControlGroups = true;
+        ProtectClock = true;
+        ProtectHostname = true;
+        ProtectProc = "invisible";
+        LockPersonality = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        RestrictNamespaces = true;
+        # PulseAudio socket, XMPP
+        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+        SystemCallArchitectures = "native";
+        SystemCallFilter = [ "@system-service" "~@privileged" ];
       };
     };
   };

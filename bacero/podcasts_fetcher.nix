@@ -86,11 +86,35 @@ in
         EnvironmentFile = secrets.podcasts_fetcher_ilpost_credentials.path;
 
         PrivateTmp = true;
-        InaccessiblePaths = cfg.protectedPaths ++ [
-          "/home"
-          "/root"
-          "/boot"
+        InaccessiblePaths = cfg.protectedPaths ++ [ "/boot" ];
+
+        # Sandbox for Firefox + Selenium browsing an external site:
+        # read-only system, writable only the podcasts and its home
+        # (Firefox caches). No syscall filter, MemoryDenyWriteExecute or
+        # RestrictNamespaces: they break the JavaScript JIT and the
+        # Firefox sandbox, which uses its own namespaces and seccomp.
+        ProtectSystem = "strict";
+        ProtectHome = true;
+        ReadWritePaths = [
+          cfg.podcastDir
+          config.users.users.podcasts_fetcher.home
         ];
+        PrivateDevices = true;
+
+        NoNewPrivileges = true;
+        CapabilityBoundingSet = "";
+        ProtectKernelTunables = true;
+        ProtectKernelModules = true;
+        ProtectKernelLogs = true;
+        ProtectControlGroups = true;
+        ProtectClock = true;
+        ProtectHostname = true;
+        ProtectProc = "invisible";
+        LockPersonality = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" "AF_NETLINK" ];
+        SystemCallArchitectures = "native";
       };
 
       path = with pkgs; [
