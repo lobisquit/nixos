@@ -26,8 +26,8 @@ in
     systemd.services.backlight_off = {
       description = "Switches backlight off";
 
-      script = '' light -U 100 || exit 1 '';
-      path = with pkgs; [ light ];
+      script = '' brightnessctl --quiet set 0 '';
+      path = with pkgs; [ brightnessctl ];
 
       serviceConfig = {
         Type = "oneshot";
