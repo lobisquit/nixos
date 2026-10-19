@@ -101,6 +101,9 @@ shared/                  moduli comuni: backupper.nix, backlight_off.nix, nginx_
   `forceDiscover` crea le cartelle mancanti. Limiti noti di vdirsyncer 0.20: un errore in una coppia
   ferma tutte le altre in quel giro; una cartella locale svuotata a mano blocca la coppia finché non
   si cancella `<coppia>.items` nello status; il `revert` delle modifiche locali avviene a giri alterni.
+  vdirsyncer crea i file 0600 (`tempfile.mkstemp`) ignorando la umask: `ExecStopPost` li rende
+  leggibili al gruppo (PR #3). **Verificare sempre i permessi dei file scritti da strumenti esterni**:
+  `UMask` non basta per mbsync né per vdirsyncer.
 - `monitoring`: Prometheus + node/smartctl exporter + Alertmanager via email + healthchecks.io ogni 15'.
 - `transmission_wrapper` (contiene anche utenti/share samba), `samba_wrapper`,
   `navidrome_wrapper` (overlay di fix da fork `cimm/nixpkgs`).
