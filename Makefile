@@ -40,6 +40,11 @@ prune_remote:
 mount_remote:
 	scripts/restic_mount_remote.sh $(ARGS)
 
+# Same for the local backup of nasus, on the external disk plugged into
+# this PC (mounted read-only on /mnt/backup_hdd by lobisquit-pc).
+mount_local:
+	scripts/restic_mount_local.sh $(ARGS)
+
 no-uncommitted-changes:
 	@git diff --quiet
 

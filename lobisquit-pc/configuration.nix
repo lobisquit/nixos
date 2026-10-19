@@ -8,6 +8,7 @@
       ./networking.nix
       ./sound.nix
       ./users.nix
+      ./backup_hdd.nix
       ./xserver.nix
       inputs.home-manager.nixosModules.home-manager
     ];
