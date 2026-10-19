@@ -79,14 +79,18 @@ def convert_and_send(jobs):
                 '-hide_banner',
                 '-loglevel', 'error',
                 '-i', recording_dir / 'video.mp4',
-                '-i', recording_dir / 'audio.mp3',
+                '-i', recording_dir / 'audio.wav',
                 '-c:v', 'libx264',
-                '-profile:v', 'baseline',
+                '-preset', 'medium',
+                '-crf', '26', # lower = better quality and bigger file
+                '-profile:v', 'high',
+                # 15 fps and at most 720p are enough for a door camera
+                '-vf', "fps=15,scale=-2:'min(720,ih)',format=yuv420p",
                 '-c:a', 'aac',
-                '-ar', '44100',
-                '-ac', '2',
-                '-b:a', '128k',
-                '-vf', 'format=yuv420p',
+                '-ac', '1',
+                '-b:a', '64k',
+                # metadata at the start: playback begins before the download ends
+                '-movflags', '+faststart',
                 recording_dir / 'combined.mp4'], check=True)
 
             print('Sending recording to the XMPP room', flush=True)
@@ -171,7 +175,7 @@ if __name__ == '__main__':
                     '-f', 'pulse',
                     '-i', AUDIO_INTERFACE,
                     '-t', '00:10:00',
-                    recording_dir / 'audio.mp3'
+                    recording_dir / 'audio.wav'
                 ])
 
                 video_process = subprocess.Popen([
@@ -182,6 +186,11 @@ if __name__ == '__main__':
                     '-f', 'v4l2',
                     '-i', VIDEO_INTERFACE,
                     '-t', '00:10:00',
+                    # fast, high-quality capture: the final compression
+                    # happens later, in the worker thread
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '18',
                     recording_dir / 'video.mp4'
                 ])
 
