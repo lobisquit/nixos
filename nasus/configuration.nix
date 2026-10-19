@@ -136,7 +136,11 @@
     group = "storage";
   };
 
-  services.xmpp_server.enable = true;
+  services.xmpp_server = {
+    enable = true;
+    federation = false;
+  };
+
   services.xmpp_telegram = {
     enable = true;
     image = "codeberg.org/slidge/slidgram:v0.5.0@sha256:d081775bfeb8ff03eebbea49bb1558edd87f73313a39f78fa054c4ccfa8252ab";
