@@ -77,7 +77,7 @@
     repositories.remote = {
       startAt = "*-*-* 03:00:00";
       # the B2 key of this host cannot delete: retention is applied
-      # from the PC with `make prune_remote-nasus`
+      # from the PC with `make prune_remote`
       prune = false;
     };
     repositories.local = {

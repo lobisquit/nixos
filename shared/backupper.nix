@@ -121,7 +121,8 @@ let
           backup. Turn it off for a repository whose credentials cannot
           delete, such as a B2 key without deleteFiles: a compromised host
           can then add snapshots but not remove them, and the retention is
-          applied from a trusted machine (scripts/restic_prune_remote.sh).
+          applied from a trusted machine (scripts/restic_prune_remote.sh,
+          which repeats the default policy of `keep`).
         '';
       };
 
