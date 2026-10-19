@@ -14,7 +14,6 @@ in
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
       ./backupper.nix
-      ./beancount_bot.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -109,6 +108,5 @@ in
   };
 
   services.doorman.enable = true;
-  services.beancount_bot.enable = true;
   services.mensaspaziale_bot.enable = false;
 }
