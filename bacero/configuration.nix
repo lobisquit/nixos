@@ -55,9 +55,26 @@ in
   };
 
   services.openssh = {
-     enable = true;
-     openFirewall = true;
-     extraConfig = "TrustedUserCAKeys /etc/ssh/ca_key.pub";
+    enable = true;
+    openFirewall = true;
+    extraConfig = "TrustedUserCAKeys /etc/ssh/ca_key.pub";
+
+    # Only keys and certificates: the NixOS defaults allow passwords.
+    # Ciphers, key exchanges and MACs already come from the curated list
+    # of NixOS (services.openssh.enableRecommendedAlgorithms).
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      AuthenticationMethods = "publickey";
+      PermitRootLogin = "prohibit-password";
+      AllowUsers = [ "root" ];
+
+      X11Forwarding = false;
+      AllowAgentForwarding = false;
+
+      MaxAuthTries = 3;
+      LoginGraceTime = 30;
+    };
   };
 
   users.users.root.openssh.authorizedKeys.keys = [
