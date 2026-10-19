@@ -81,10 +81,6 @@ in
     services.postgresql = {
       enable = true;
       ensureDatabases = [ "beancount_bot" ];
-      authentication = pkgs.lib.mkOverride 10 ''
-        #type database  DBuser  auth-method
-        local all       all     trust
-      '';
       ensureUsers = [
         {
           name = "beancount_bot";

@@ -96,6 +96,18 @@ in
     sources.miniflux.repositories = [ "remote" ];
   };
 
+  # PostgreSQL, shared by miniflux and beancount_bot: only Unix sockets,
+  # every system user reaches only the database named after it (peer
+  # authentication), and only the postgres user is superuser.
+  services.postgresql = {
+    enableTCPIP = false;
+    authentication = lib.mkForce ''
+      # TYPE  DATABASE  USER      METHOD
+      local   all       postgres  peer map=postgres
+      local   sameuser  all       peer
+    '';
+  };
+
   services.doorman.enable = true;
   services.beancount_bot.enable = true;
   services.mensaspaziale_bot.enable = false;
