@@ -2,20 +2,21 @@
 
 # The SD card of the 3D printer (through a USB reader), always at the same
 # path, so that it can be the fixed output folder of the slicer. Mounted
-# automatically on first access when it is plugged in, and kept mounted
-# until it is removed.
+# as soon as it is plugged in, and released when it is removed.
+let
+  uuid = "0403-0201";
+  where = "/mnt/sd_stampante";
+in
 {
-  fileSystems."/mnt/sd_stampante" = {
-    device = "/dev/disk/by-uuid/0403-0201";
+  fileSystems.${where} = {
+    device = "/dev/disk/by-uuid/${uuid}";
     fsType = "vfat";
-    # no fsck at mount time: it would only slow down the first access
+    # no fsck at mount time: it would only slow down the mount
     noCheck = true;
     options = [
-      "noauto"                      # not at boot...
-      "x-systemd.automount"         # ...but on first access
-      "x-systemd.device-timeout=5s" # no long wait if it is not plugged in
-      "x-systemd.device-bound=true" # unmounted when the card is removed
+      "noauto"                      # not at boot: udev mounts it on plug (below)
       "nofail"
+      "x-systemd.device-bound=true" # unmounted when the card is removed
       # write every file to the card as soon as it is closed, so that
       # pulling the card out after a copy does not lose it
       "flush"
@@ -27,4 +28,10 @@
       "dmask=0007"
     ];
   };
+
+  # Mount on plug: when the card appears, udev asks systemd to start the
+  # mount unit generated from the entry above (mnt-sd_stampante.mount)
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_UUID}=="${uuid}", ENV{SYSTEMD_WANTS}+="mnt-sd_stampante.mount"
+  '';
 }
