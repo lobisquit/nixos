@@ -15,7 +15,11 @@ in
     image = lib.mkOption {
       type = lib.types.str;
       default = "codeberg.org/slidge/slidgram:latest";
-      description = "Container image; pin a version tag (e.g. :v0.5.0) for fewer surprises.";
+      description = ''
+        Container image. Pin it by digest as well as by tag
+        (e.g. codeberg.org/slidge/slidgram:v0.5.0@sha256:...), so that a
+        tag moved on the registry cannot change what runs here.
+      '';
     };
 
     debug = lib.mkOption {
@@ -88,7 +92,12 @@ in
       backend = lib.mkDefault "podman";
       containers.slidgram = {
         image = cfg.image;
-        extraOptions = [ "--network=host" ]; # reach Prosody on localhost:5347
+        extraOptions = [
+          "--network=host" # reach Prosody on localhost:5347
+          # no privilege escalation and no capabilities inside the container
+          "--security-opt=no-new-privileges"
+          "--cap-drop=all"
+        ];
         volumes = [ "${dataDir}:/var/lib/slidge:U" ];
         environmentFiles = [ config.sops.templates."slidgram.env".path ];
         environment = {
@@ -100,7 +109,10 @@ in
         cmd = [
           "--jid" jid
           "--upload-service" "upload.${domain}"
-          "--user-jid-validator" ".*@${lib.escapeRegex domain}"
+          # Only users of this server. slidge uses re.match, which anchors
+          # only the start: without "$", user@${domain}.attacker.org would
+          # pass. The optional resource is for the full JIDs in disco#items.
+          "--user-jid-validator" "^[^@/]+@${lib.escapeRegex domain}(/.*)?$"
           "--admins" (builtins.head xmpp.admins)
         ] ++ lib.optional cfg.debug "--debug"; # very verbose, includes pyrogram internals
       };

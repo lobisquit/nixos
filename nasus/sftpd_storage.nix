@@ -86,6 +86,18 @@ in
       PermitTunnel no
       AllowAgentForwarding no
       AllowTcpForwarding no
+
+    # Only the unison server: no shell, no TTY, no tunnels or forwarding.
+    # The client (sync_folders on lobisquit-pc) runs "unison -server"
+    # anyway, the command it asks for is ignored.
+    Match User storage_unison
+      ForceCommand ${pkgs.unison}/bin/unison -server
+      PermitTTY no
+      PermitTunnel no
+      X11Forwarding no
+      AllowAgentForwarding no
+      AllowTcpForwarding no
+      AllowStreamLocalForwarding no
     Match All
     '';
 

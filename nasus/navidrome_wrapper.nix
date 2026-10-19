@@ -34,6 +34,12 @@ in
         default = "navidrome.domain";
       };
 
+      enableSharing = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Public share links (anyone with the link can listen, no login).";
+      };
+
       musicFolder = mkOption {
         type = types.path;
         default = "/mnt/storage_drive/navidrome";
@@ -44,14 +50,15 @@ in
   config = mkIf cfg.enable {
     services.navidrome = {
       enable = true;
-      openFirewall = true;
+      # listens on localhost only: reached through nginx
+      openFirewall = false;
       group = cfg.group;
 
       settings = {
         Address = "127.0.0.1";
         Port = cfg.internalPort;
         MusicFolder = cfg.musicFolder;
-        EnableSharing = true;
+        EnableSharing = cfg.enableSharing;
       };
     };
 
