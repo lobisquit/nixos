@@ -30,9 +30,14 @@ in
     services.prometheus = {
       enable = true;
       port = cfg.prometheusInternalPort;
+      # Everything listens on localhost only: Prometheus scrapes the
+      # exporters locally and the UIs are reached with an SSH tunnel
+      # (ssh -L 9090:127.0.0.1:9090 root_<host>).
+      listenAddress = "127.0.0.1";
       exporters = {
         node = {
           enable = true;
+          listenAddress = "127.0.0.1";
           enabledCollectors = [ "systemd" ];
         };
       };
@@ -54,7 +59,8 @@ in
           static_configs = [
             {
               targets = [
-                "localhost:${toString config.services.prometheus.alertmanager.port}"
+                # not "localhost", which may resolve to ::1
+                "127.0.0.1:${toString config.services.prometheus.alertmanager.port}"
               ];
             }
           ];
@@ -65,6 +71,10 @@ in
 
       alertmanager = {
         enable = true;
+        listenAddress = "127.0.0.1";
+        # single instance: no HA gossip, which otherwise listens on
+        # 0.0.0.0:9094 (TCP and UDP)
+        extraFlags = [ "--cluster.listen-address=" ];
         checkConfig = false;
         configText = ''
           global:
