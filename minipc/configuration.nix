@@ -76,14 +76,14 @@
 
   networking.wg-quick.interfaces = {
     wg-home-inner = {
-      address = [ "192.168.77.3/24" ];
-      dns = [ "192.168.77.1" ];
+      address = [ "10.3.0.3/24" ];
+      dns = [ "10.3.0.1" ];
       privateKeyFile = config.sops.secrets.wireguard_private_key.path;
 
       peers = [
         {
           publicKey = "Wb6v3aDIUvHLlQ76r32ZfzoMkd5matP2YcQt9IOWe3Q=";
-          allowedIPs = [ "192.168.77.0/24" "10.0.0.0/24" "10.0.14.0/24" ];
+          allowedIPs = [ "10.3.0.0/16" ];
           endpoint = "home.lovisotto.it:51190";
           persistentKeepalive = 60;
         }
@@ -93,8 +93,8 @@
     };
 
     wg-home-full = {
-      address = [ "192.168.77.3/24" ];
-      dns = [ "192.168.77.1" ];
+      address = [ "10.3.0.3/24" ];
+      dns = [ "10.3.0.1" ];
       privateKeyFile = config.sops.secrets.wireguard_private_key.path;
 
       peers = [
