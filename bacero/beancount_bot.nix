@@ -94,7 +94,7 @@ in
       "${cfg.backupFolder}".d = {
         user = config.users.users.beancount_bot.name;
         group = cfg.backupGroup;
-        mode = "0755";
+        mode = "2750";
       };
     };
   };

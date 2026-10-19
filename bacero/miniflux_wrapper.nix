@@ -75,11 +75,14 @@ in
     };
 
     users.groups."${cfg.backupGroup}" = {};
+    # Readable only by miniflux and by the backup group. The setgid bit
+    # makes new files belong to the backup group, so that backupper can
+    # read them without them being world-readable.
     systemd.tmpfiles.settings.miniflux = {
       "${cfg.backupFolder}".d = {
         user = config.users.users.miniflux.name;
         group = cfg.backupGroup;
-        mode = "0755";
+        mode = "2750";
       };
     };
 
@@ -91,6 +94,8 @@ in
         Type = "oneshot";
         User = config.users.users.miniflux.name;
         Group = config.users.users.miniflux.group;
+        # new files: rw for the owner, r for the (backup) group, nothing for others
+        UMask = "0027";
         EnvironmentFile = secrets.miniflux_admin_credentials.path;
         Environment = ''DATABASE_URL="${config.services.miniflux.config.DATABASE_URL}"'';
 
@@ -111,12 +116,24 @@ in
         miniflux
         postgresql
       ];
+      # Write to a temporary file and rename it only on success: a failed
+      # export never truncates the previous good copy, and the new file
+      # always gets the permissions above, even if an old one exists.
       script = ''
-          miniflux -export-user-feeds "$ADMIN_USERNAME" \
-              > "${cfg.backupFolder}/$ADMIN_USERNAME.opml"
+          dir="${cfg.backupFolder}"
 
-          pg_dump miniflux \
-              > "${cfg.backupFolder}/postgres_miniflux.sql"
+          save() {
+              local target="$dir/$1"; shift
+              tmp=$(mktemp "$target.XXXXXX")
+              trap 'rm -f "$tmp"' EXIT
+              "$@" > "$tmp"
+              chmod 0640 "$tmp"
+              mv -f "$tmp" "$target"
+              trap - EXIT
+          }
+
+          save "$ADMIN_USERNAME.opml" miniflux -export-user-feeds "$ADMIN_USERNAME"
+          save postgres_miniflux.sql pg_dump miniflux
       '';
     };
 
