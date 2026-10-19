@@ -38,6 +38,16 @@ in
         type = types.path;
         default = "/mnt/storage_drive/transmission";
       };
+
+      allowedNetworks = mkOption {
+        type = types.nonEmptyListOf types.str;
+        example = [ "10.1.0.0/16" "10.3.0.0/16" ];
+        description = ''
+          Networks (CIDR) allowed to reach the web interface through nginx;
+          every other client gets 403. Transmission itself listens only on
+          localhost, so nginx is the only way in.
+        '';
+      };
     };
   };
 
@@ -57,16 +67,22 @@ in
 
     services.transmission = {
       enable = true;
-      openRPCPort = true;
+      # RPC reachable only through nginx (TLS + network filter)
+      openRPCPort = false;
       credentialsFile = secrets.transmission_credentials.path;
       openPeerPorts = true;
       home = cfg.home;
       package = pkgs.transmission_4;
       settings = {
         incomplete-dir-enabled = false;
-        rpc-bind-address = "0.0.0.0";
+        rpc-bind-address = "127.0.0.1";
         rpc-whitelist-enabled = true;
-        rpc-whitelist = "127.0.0.1,192.168.77.*,192.168.0.*";
+        rpc-whitelist = "127.0.0.1";
+        # reject requests for other host names (DNS rebinding)
+        rpc-host-whitelist-enabled = true;
+        rpc-host-whitelist = cfg.fqdn;
+        # username and password come from credentialsFile
+        rpc-authentication-required = true;
         blocklist-enabled = true;
         rpc-port = cfg.internalPort;
         blocklist-url = "https://raw.githubusercontent.com/Naunter/BT_BlockLists/master/bt_blocklists.gz";
@@ -142,6 +158,9 @@ in
       forceSSL = true;
       locations."/" = {
         proxyPass = "http://127.0.0.1:${toString cfg.internalPort}";
+        extraConfig = concatMapStrings (net: "allow ${net};\n") cfg.allowedNetworks + ''
+          deny all;
+        '';
       };
     };
 

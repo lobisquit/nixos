@@ -117,6 +117,7 @@
   services.transmission_wrapper = {
     enable = true;
     fqdn = "transmission.home.lovisotto.it";
+    allowedNetworks = [ "10.1.0.0/16" "10.3.0.0/16" ];
   };
 
   services.samba_wrapper.enable = true;
