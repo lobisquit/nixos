@@ -125,15 +125,36 @@ in
 
       path = with pkgs; [ samba ];
 
+      # The secret has one "username password" line per user; the password
+      # is the rest of the line, so it may contain spaces, "*" or "\".
+      # Samba users that are no longer in the secret are removed.
       script = ''
-        set -e
+        set -eu
 
-        while read -r line; do
-          chunks=( $line )
-          username="''${chunks[0]}"
-          password="''${chunks[1]}"
-          echo -e "$password\n$password" | smbpasswd -a "$username"
+        declare -A wanted=()
+        # "|| [ -n ... ]": also the last line when it has no final newline
+        while read -r username password || [ -n "''${username:-}" ]; do
+          # skip empty lines and comments
+          [ -n "$username" ] && [ "''${username:0:1}" != "#" ] || continue
+          wanted[$username]=1
+          printf '%s\n%s\n' "$password" "$password" | smbpasswd -s -a "$username"
         done < ${secrets.smbpasswd.path}
+
+        # never wipe all the users because of an empty or broken secret
+        if [ "''${#wanted[@]}" -eq 0 ]; then
+          echo "No users in the secret: existing Samba users left untouched" >&2
+          exit 1
+        fi
+
+        for existing in $(pdbedit -L | cut -d: -f1); do
+          if [ -z "''${wanted[$existing]:-}" ]; then
+            echo "Removing Samba user $existing, not in the secret"
+            # pdbedit, unlike smbpasswd -x, also removes entries whose Unix
+            # account no longer exists; a failure here is only a warning
+            pdbedit -x -u "$existing" \
+              || echo "Warning: could not remove Samba user $existing" >&2
+          fi
+        done
         '';
 
       serviceConfig = {
