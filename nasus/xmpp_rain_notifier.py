@@ -21,7 +21,7 @@ Configuration: the YAML file $CREDENTIALS_DIRECTORY/configuration
 
 Environment (set by the NixOS module):
   BOT_JID            bot account, e.g. meteo@lovisotto.it
-  RECIPIENT          who receives the alert
+  RECIPIENTS         who receives the alert, comma separated
   WINDOWS            morning windows, e.g. "8-10,17-19" (local time, end excluded)
   AFTERNOON_WINDOWS  afternoon windows, e.g. "17-19"
   MIN_PROBABILITY    % above which an hour counts as rainy (default 50)
@@ -47,7 +47,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 log = logging.getLogger("rain_notifier")
 
 JID = os.environ["BOT_JID"]
-RECIPIENT = os.environ["RECIPIENT"]
+RECIPIENTS = [jid.strip() for jid in os.environ["RECIPIENTS"].split(",") if jid.strip()]
 TIMEZONE = os.environ.get("TIMEZONE", "Europe/Rome")
 MIN_PROBABILITY = float(os.environ.get("MIN_PROBABILITY", "50"))
 MIN_PRECIPITATION = float(os.environ.get("MIN_PRECIPITATION", "0.2"))
@@ -170,8 +170,9 @@ async def send(text):
 
     async def on_start(_event):
         bot.send_presence()
-        bot.send_message(mto=RECIPIENT, mbody=text, mtype="chat")
-        log.info("Sent to %s", RECIPIENT)
+        for recipient in RECIPIENTS:
+            bot.send_message(mto=recipient, mbody=text, mtype="chat")
+            log.info("Sent to %s", recipient)
         bot.disconnect()  # flushes the send queue first
 
     def on_failed_auth(_event):

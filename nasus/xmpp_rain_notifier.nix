@@ -14,7 +14,7 @@ let
 
     environment = {
       BOT_JID = cfg.jid;
-      RECIPIENT = cfg.recipient;
+      RECIPIENTS = lib.concatStringsSep "," cfg.recipients;
       WINDOWS = lib.concatStringsSep "," cfg.windows;
       AFTERNOON_WINDOWS = lib.concatStringsSep "," cfg.afternoonWindows;
       MIN_PROBABILITY = toString cfg.minProbability;
@@ -53,10 +53,11 @@ in
       description = "Bot account that sends the alert.";
     };
 
-    recipient = lib.mkOption {
-      type = lib.types.str;
-      default = "enrico@${config.services.xmpp_server.domain}";
-      description = "Who receives the alert.";
+    recipients = lib.mkOption {
+      type = lib.types.nonEmptyListOf lib.types.str;
+      default = [ "enrico@${config.services.xmpp_server.domain}" ];
+      example = [ "enrico@lovisotto.it" "erika@lovisotto.it" ];
+      description = "Who receives the alerts.";
     };
 
     startAt = lib.mkOption {
