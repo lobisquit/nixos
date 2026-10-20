@@ -1,0 +1,1 @@
+../shared/xmpp_alerts.nix

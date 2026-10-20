@@ -1,11 +1,28 @@
+# Alerts with `severity: critical` are sent by email too (see the
+# Alertmanager routes in monitoring.nix): use it for the problems that
+# may lose data or break the XMPP notifications themselves.
 groups:
   - name: monitoring
     rules:
       - alert: monitoring:down
         expr: up == 0
+        labels:
+          severity: critical
         annotations:
-          summary: "[{{ $labels.job }}]: monitoring for is down"
-          description: "Instance {{ $labels.instance }} of is down for {{ $labels.job }}"
+          summary: "[{{ $labels.job }}] monitoring target {{ $labels.instance }} is down"
+          description: "Instance {{ $labels.instance }} of {{ $labels.job }} does not answer to Prometheus"
+
+      # Alertmanager could not deliver a notification over XMPP (bot or
+      # Prosody down, wrong password, ...). Routed by email only.
+      - alert: alertmanager:xmpp_failing
+        expr: increase(alertmanager_notifications_failed_total{integration="webhook"}[15m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "[{{ $labels.job }}] Alertmanager cannot send notifications over XMPP"
+          description: |
+            Some notifications were not delivered to prometheus-xmpp-alerts
+            in the last 15 minutes: check the other alerts in Alertmanager.
 
   - name: resources
     rules:
@@ -15,23 +32,30 @@ groups:
 
       - alert: resources:high_disk_usage_root
         expr: resources:disk_usage{mountpoint="/"} > 0.8
+        labels:
+          severity: critical
         annotations:
           summary: "[{{ $labels.job }}] {{ $labels.mountpoint }} is almost full"
           description: |
             In {{ $labels.job }}, disk {{ $labels.device }} mounted on
-            {{ $labels.mountpoint }} is more than 80% occupied"
+            {{ $labels.mountpoint }} is more than 80% occupied
 
+      # Prosody keeps its data here
       - alert: resources:high_disk_usage_storage
         expr: resources:disk_usage{mountpoint="/mnt/storage_drive"} > 0.95
+        labels:
+          severity: critical
         annotations:
           summary: "[{{ $labels.job }}] {{ $labels.mountpoint }} is almost full"
           description: |
             In {{ $labels.job }}, disk {{ $labels.device }} mounted on
-            {{ $labels.mountpoint }} is more than 95% occupied"
+            {{ $labels.mountpoint }} is more than 95% occupied
 
       # disk health
       - alert: resources:disk_not_healthy
         expr: smartmon_device_smart_healthy < 1
+        labels:
+          severity: critical
         annotations:
           summary: "[{{ $labels.job }}] {{ $labels.disk }} is not healthy"
           description: |
@@ -46,6 +70,7 @@ groups:
 
       - alert: resources:high_ram_usage
         expr: resources:ram_usage > 0.8
+        for: 5m
         annotations:
           summary: "[{{ $labels.job }}] RAM is almost full"
 
@@ -55,8 +80,9 @@ groups:
 
       - alert: resources:high_swap_usage
         expr: resources:swap_usage > 0.3
+        for: 5m
         annotations:
-          summary: "[{{ $labels.job }}] Swap too much swap is in use"
+          summary: "[{{ $labels.job }}] too much swap is in use"
 
       # cpu usage
       - record: resources:cpu_usage
@@ -67,7 +93,7 @@ groups:
         expr: rate(node_network_receive_bytes_total[30s])
 
       - record: resources:network_transmit_rate
-        expr: rate(node_network_receive_bytes_total[30s])
+        expr: rate(node_network_transmit_bytes_total[30s])
 
   - name: systemd
     interval: 3s
@@ -86,6 +112,27 @@ groups:
           systemd:is_active{job="nasus", name="sshd.service"} == 0
         annotations:
           summary: "[{{ $labels.job }}] SSH daemon is not running"
+
+      # XMPP server, used by the alerts of every host
+      - alert: systemd:nasus:prosody:not_active
+        expr: |
+          absent(systemd:is_active{job="nasus", name="prosody.service"}) or
+          systemd:is_active{job="nasus", name="prosody.service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "[nasus] Prosody is not running: XMPP alerts cannot be delivered"
+
+      - alert: systemd:nasus:xmpp_alerts:not_active
+        expr: |
+          absent(systemd:is_active{job="nasus", name="prometheus-xmpp-alerts.service"}) or
+          systemd:is_active{job="nasus", name="prometheus-xmpp-alerts.service"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "[nasus] XMPP alerts bot is not running"
 
       # services that fail
       - record: systemd:is_failed

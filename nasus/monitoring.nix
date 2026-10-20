@@ -5,9 +5,12 @@ with lib;
 let
   cfg = config.services.monitoring;
   secrets = config.sops.secrets;
+  alertmanagerPort = config.services.prometheus.alertmanager.port;
 in
 
 {
+  imports = [ ./xmpp_alerts.nix ];
+
   options.services.monitoring = {
 
     enable = lib.mkOption {
@@ -22,6 +25,10 @@ in
   };
 
   config = mkIf cfg.enable {
+
+    # Alerts go over XMPP; the ones with `severity: critical` also by
+    # email, since they may be the reason why XMPP does not work.
+    services.xmpp_alerts.enable = true;
 
     sops.secrets.alertmanager_credentials = {
       mode = "0400";
@@ -52,6 +59,8 @@ in
           static_configs = [{
             targets = [
               "127.0.0.1:${toString config.services.prometheus.exporters.node.port}"
+              # own metrics, to know when notifications fail
+              "127.0.0.1:${toString alertmanagerPort}"
               "127.0.0.1:${toString config.services.prometheus.exporters.smartctl.port}"
             ];
           }];
@@ -65,7 +74,7 @@ in
             {
               targets = [
                 # not "localhost", which may resolve to ::1
-                "127.0.0.1:${toString config.services.prometheus.alertmanager.port}"
+                "127.0.0.1:${toString alertmanagerPort}"
               ];
             }
           ];
@@ -86,15 +95,37 @@ in
             resolve_timeout: 1m
 
           route:
-            # default route
+            # default route: XMPP only
             group_by: ['job']
             group_wait: 10s
             group_interval: 10s
             repeat_interval: 1d
-            receiver: 'email'
+            receiver: 'xmpp'
+            routes:
+              # XMPP notifications are failing: email only, sending this
+              # one over XMPP as well would just fail again
+              - matchers: [ 'alertname="alertmanager:xmpp_failing"' ]
+                receiver: 'email'
+              - matchers: [ 'severity="critical"' ]
+                receiver: 'xmpp_email'
 
           receivers:
+          - name: 'xmpp'
+            webhook_configs:
+              - url: '${config.services.xmpp_alerts.webhookUrl}'
+
           - name: 'email'
+            email_configs:
+              - to: $RECIPIENT
+                from: $SENDER
+                smarthost: $SMARTHOST
+                auth_username: $USERNAME
+                auth_identity: $IDENTITY
+                auth_password: $PASSWORD
+
+          - name: 'xmpp_email'
+            webhook_configs:
+              - url: '${config.services.xmpp_alerts.webhookUrl}'
             email_configs:
               - to: $RECIPIENT
                 from: $SENDER
