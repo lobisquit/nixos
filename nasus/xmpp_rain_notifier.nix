@@ -4,14 +4,47 @@ let
   cfg = config.services.xmpp_rain_notifier;
   secrets = config.sops.secrets;
   python = pkgs.python3.withPackages (ps: [ ps.slixmpp ps.pyyaml ]);
+
+  # Both runs share the same script, user and state directory.
+  service = mode: startAt: {
+    description = "Rain alert over XMPP (${mode})";
+    inherit startAt;
+    wants = [ "network-online.target" ];
+    after = [ "network-online.target" "prosody.service" ];
+
+    environment = {
+      BOT_JID = cfg.jid;
+      RECIPIENT = cfg.recipient;
+      WINDOWS = lib.concatStringsSep "," cfg.windows;
+      AFTERNOON_WINDOWS = lib.concatStringsSep "," cfg.afternoonWindows;
+      MIN_PROBABILITY = toString cfg.minProbability;
+      MIN_PRECIPITATION = cfg.minPrecipitation;
+      TIMEZONE = config.time.timeZone;
+    };
+
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${python}/bin/python ${./xmpp_rain_notifier.py} ${mode}";
+      DynamicUser = true;
+      User = "xmpp_rain_notifier"; # same name = same UID for both units
+      StateDirectory = "xmpp_rain_notifier"; # what the morning run announced
+      LoadCredential = "configuration:${secrets.rain_notifier_configuration.path}";
+
+      ProtectHome = true;
+      PrivateDevices = true;
+      CapabilityBoundingSet = "";
+      NoNewPrivileges = true;
+    };
+  };
 in
 {
   options.services.xmpp_rain_notifier = {
     enable = lib.mkEnableOption ''
-      a morning XMPP alert when rain is expected in the given time windows.
-      Position and bot password are in the sops secret
-      `rain_notifier_configuration`; the format is described at the top
-      of xmpp_rain_notifier.py
+      XMPP alerts when rain is expected in the given time windows:
+      one check in the morning, plus one in the afternoon that warns
+      only if the forecast changed. Position and bot password are in the
+      sops secret `rain_notifier_configuration`; the format is described
+      at the top of xmpp_rain_notifier.py
     '';
 
     jid = lib.mkOption {
@@ -29,13 +62,32 @@ in
     startAt = lib.mkOption {
       type = lib.types.str;
       default = "*-*-* 08:00:00";
-      description = "When to check the forecast (systemd OnCalendar format).";
+      description = "When to run the morning check (systemd OnCalendar format).";
     };
 
     windows = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ "8-10" "17-19" ];
-      description = "Local-time windows to check, \"start-end\" (end excluded).";
+      description = "Local-time windows of the morning check, \"start-end\" (end excluded).";
+    };
+
+    afternoonStartAt = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = "*-*-* 15:00:00";
+      description = ''
+        When to run the afternoon check (systemd OnCalendar format);
+        null disables it.
+      '';
+    };
+
+    afternoonWindows = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ "17-19" ];
+      description = ''
+        Windows of the afternoon check. An alert is sent only for windows
+        that are rainy now but were not announced in the morning.
+        Use the same names as in `windows`.
+      '';
     };
 
     minProbability = lib.mkOption {
@@ -54,32 +106,10 @@ in
   config = lib.mkIf cfg.enable {
     sops.secrets.rain_notifier_configuration = { };
 
-    systemd.services.xmpp_rain_notifier = {
-      description = "Morning rain alert over XMPP";
-      inherit (cfg) startAt;
-      wants = [ "network-online.target" ];
-      after = [ "network-online.target" "prosody.service" ];
-
-      environment = {
-        BOT_JID = cfg.jid;
-        RECIPIENT = cfg.recipient;
-        WINDOWS = lib.concatStringsSep "," cfg.windows;
-        MIN_PROBABILITY = toString cfg.minProbability;
-        MIN_PRECIPITATION = cfg.minPrecipitation;
-        TIMEZONE = config.time.timeZone;
-      };
-
-      serviceConfig = {
-        Type = "oneshot";
-        ExecStart = "${python}/bin/python ${./xmpp_rain_notifier.py}";
-        DynamicUser = true;
-        LoadCredential = "configuration:${secrets.rain_notifier_configuration.path}";
-
-        ProtectHome = true;
-        PrivateDevices = true;
-        CapabilityBoundingSet = "";
-        NoNewPrivileges = true;
-      };
+    systemd.services = {
+      xmpp_rain_notifier = service "morning" cfg.startAt;
+    } // lib.optionalAttrs (cfg.afternoonStartAt != null) {
+      xmpp_rain_notifier_afternoon = service "afternoon" cfg.afternoonStartAt;
     };
   };
 }
