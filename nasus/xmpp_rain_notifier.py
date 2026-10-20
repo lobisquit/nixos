@@ -21,7 +21,9 @@ Configuration: the YAML file $CREDENTIALS_DIRECTORY/configuration
 
 Environment (set by the NixOS module):
   BOT_JID            bot account, e.g. meteo@lovisotto.it
-  RECIPIENTS         who receives the alert, comma separated
+  RECIPIENTS         who receives the alert, comma separated (may be empty)
+  ROOMS              group chats (MUC) where the alert is posted, comma separated
+  ROOM_NICK          nickname of the bot in the group chats
   WINDOWS            morning windows, e.g. "8-10,17-19" (local time, end excluded)
   AFTERNOON_WINDOWS  afternoon windows, e.g. "17-19"
   MIN_PROBABILITY    % above which an hour counts as rainy (default 50)
@@ -47,7 +49,15 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 log = logging.getLogger("rain_notifier")
 
 JID = os.environ["BOT_JID"]
-RECIPIENTS = [jid.strip() for jid in os.environ["RECIPIENTS"].split(",") if jid.strip()]
+
+
+def parse_list(text):
+    return [item.strip() for item in text.split(",") if item.strip()]
+
+
+RECIPIENTS = parse_list(os.environ.get("RECIPIENTS", ""))
+ROOMS = parse_list(os.environ.get("ROOMS", ""))
+ROOM_NICK = os.environ.get("ROOM_NICK", "Meteo")
 TIMEZONE = os.environ.get("TIMEZONE", "Europe/Rome")
 MIN_PROBABILITY = float(os.environ.get("MIN_PROBABILITY", "50"))
 MIN_PRECIPITATION = float(os.environ.get("MIN_PRECIPITATION", "0.2"))
@@ -166,23 +176,74 @@ def afternoon(forecast):
 # ---------------------------------------------------------------- XMPP
 
 async def send(text):
+    """Send text to every recipient and room. Returns True if all went well.
+
+    Like doorman: for each room, join without waiting for the answer (the
+    server handles our stanzas in order), post the message, then wait for
+    the room to echo it back (posted) or to answer with an error.
+    Disconnecting is enough to leave the rooms.
+    """
     bot = slixmpp.ClientXMPP(JID, str(CONF["xmpp_password"]))
+    bot.register_plugin("xep_0045")  # group chats
+    room_replies = {}  # room -> future with its echo or error
+    ok = True
+
+    def on_room_stanza(stanza):
+        reply = room_replies.get(stanza["from"].bare)
+        if reply is None or reply.done():
+            return
+        if stanza["type"] == "error" or stanza["body"] == text:
+            reply.set_result(stanza)
+
+    for event in ("groupchat_message", "message_error", "presence_error"):
+        bot.add_event_handler(event, on_room_stanza)
 
     async def on_start(_event):
-        bot.send_presence()
-        for recipient in RECIPIENTS:
-            bot.send_message(mto=recipient, mbody=text, mtype="chat")
-            log.info("Sent to %s", recipient)
-        bot.disconnect()  # flushes the send queue first
+        nonlocal ok
+        try:
+            bot.send_presence()
+            for recipient in RECIPIENTS:
+                bot.send_message(mto=recipient, mbody=text, mtype="chat")
+                log.info("Sent to %s", recipient)
+
+            loop = asyncio.get_running_loop()
+            for room in ROOMS:
+                room_replies[room] = loop.create_future()
+                join = bot.make_presence(pto=f"{room}/{ROOM_NICK}")
+                join["muc_join"]["history"]["maxstanzas"] = "0"
+                join.send()
+                bot.send_message(mto=room, mbody=text, mtype="groupchat")
+
+            for room, reply in room_replies.items():
+                try:
+                    stanza = await asyncio.wait_for(reply, timeout=60)
+                except asyncio.TimeoutError:
+                    log.error("No answer from room %s", room)
+                    ok = False
+                    continue
+                if stanza["type"] == "error":
+                    log.error("Room %s refused the message: %s %s", room,
+                              stanza["error"]["condition"], stanza["error"]["text"])
+                    ok = False
+                else:
+                    log.info("Posted in room %s", room)
+        except Exception:
+            log.exception("XMPP error")
+            ok = False
+        finally:
+            bot.disconnect()  # flushes the send queue first
 
     def on_failed_auth(_event):
+        nonlocal ok
         log.error("Authentication failed for %s", JID)
+        ok = False
         bot.disconnect()
 
     bot.add_event_handler("session_start", on_start)
     bot.add_event_handler("failed_auth", on_failed_auth)
     bot.connect()
-    await asyncio.wait_for(bot.disconnected, timeout=120)
+    await asyncio.wait_for(bot.disconnected, timeout=180)
+    return ok
 
 
 def main():
@@ -198,7 +259,8 @@ def main():
     if text is None:
         log.info("Nothing to send")
         return
-    asyncio.run(send(text))
+    if not asyncio.run(send(text)):
+        sys.exit(1)  # the unit fails: visible in systemctl and monitoring
 
 
 if __name__ == "__main__":

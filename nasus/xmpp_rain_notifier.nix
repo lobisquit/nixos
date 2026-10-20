@@ -15,6 +15,8 @@ let
     environment = {
       BOT_JID = cfg.jid;
       RECIPIENTS = lib.concatStringsSep "," cfg.recipients;
+      ROOMS = lib.concatStringsSep "," cfg.rooms;
+      ROOM_NICK = cfg.roomNick;
       WINDOWS = lib.concatStringsSep "," cfg.windows;
       AFTERNOON_WINDOWS = lib.concatStringsSep "," cfg.afternoonWindows;
       MIN_PROBABILITY = toString cfg.minProbability;
@@ -54,10 +56,26 @@ in
     };
 
     recipients = lib.mkOption {
-      type = lib.types.nonEmptyListOf lib.types.str;
+      type = lib.types.listOf lib.types.str;
       default = [ "enrico@${config.services.xmpp_server.domain}" ];
       example = [ "enrico@lovisotto.it" "erika@lovisotto.it" ];
-      description = "Who receives the alerts.";
+      description = "Who receives the alerts in a private chat.";
+    };
+
+    rooms = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "famiglia@conference.lovisotto.it" ];
+      description = ''
+        Group chats (MUC) where the alerts are posted. In members-only
+        rooms, add the bot account as a member first.
+      '';
+    };
+
+    roomNick = lib.mkOption {
+      type = lib.types.str;
+      default = "Meteo";
+      description = "Nickname of the bot in the group chats.";
     };
 
     startAt = lib.mkOption {
@@ -105,6 +123,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.recipients != [ ] || cfg.rooms != [ ];
+        message = "services.xmpp_rain_notifier: set at least one of recipients and rooms.";
+      }
+    ];
+
     sops.secrets.rain_notifier_configuration = { };
 
     systemd.services = {
