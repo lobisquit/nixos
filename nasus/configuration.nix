@@ -18,6 +18,7 @@
       ./xmpp_telegram.nix
       ./xmpp_transcriber_bot.nix
       ./xmpp_mail_notifier.nix
+      ./xmpp_rain_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -163,4 +164,5 @@
   };
 
   services.xmpp_mail_notifier.enable = true;
+  services.xmpp_rain_notifier.enable = true;
 }
