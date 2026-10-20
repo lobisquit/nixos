@@ -164,5 +164,8 @@
   };
 
   services.xmpp_mail_notifier.enable = true;
-  services.xmpp_rain_notifier.enable = true;
+  services.xmpp_rain_notifier = {
+    recipients = ["enrico@lovisotto.it" "erika@lovisotto.it"];
+    enable = true;
+  };
 }
