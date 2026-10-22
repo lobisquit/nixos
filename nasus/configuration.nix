@@ -17,8 +17,6 @@
       ./xmpp_irc.nix
       ./xmpp_telegram.nix
       ./xmpp_transcriber_bot.nix
-      ./xmpp_mail_notifier.nix
-      ./xmpp_rain_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -161,11 +159,5 @@
     model = "large-v3-turbo";
     modelDir = "/mnt/storage_drive/xmpp/transcriber_bot";
     initialPrompt = "Hello Enrico ed Erika, fatemi sapere cosa ne pensate!";
-  };
-
-  services.xmpp_mail_notifier.enable = true;
-  services.xmpp_rain_notifier = {
-    recipients = ["enrico@lovisotto.it" "erika@lovisotto.it"];
-    enable = true;
   };
 }

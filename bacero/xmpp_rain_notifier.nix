@@ -10,7 +10,7 @@ let
     description = "Rain alert over XMPP (${mode})";
     inherit startAt;
     wants = [ "network-online.target" ];
-    after = [ "network-online.target" "prosody.service" ];
+    after = [ "network-online.target" ];
 
     environment = {
       BOT_JID = cfg.jid;
@@ -47,15 +47,21 @@ in
       at the top of xmpp_rain_notifier.py
     '';
 
+    domain = lib.mkOption {
+      type = lib.types.str;
+      default = "lovisotto.it";
+      description = "XMPP domain of the bot and of the default recipient.";
+    };
+
     jid = lib.mkOption {
       type = lib.types.str;
-      default = "meteo@${config.services.xmpp_server.domain}";
+      default = "meteo@${cfg.domain}";
       description = "Bot account that sends the alert.";
     };
 
     recipients = lib.mkOption {
       type = lib.types.nonEmptyListOf lib.types.str;
-      default = [ "enrico@${config.services.xmpp_server.domain}" ];
+      default = [ "enrico@${cfg.domain}" ];
       example = [ "enrico@lovisotto.it" "erika@lovisotto.it" ];
       description = "Who receives the alerts.";
     };

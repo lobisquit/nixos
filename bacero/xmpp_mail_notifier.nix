@@ -25,7 +25,7 @@ in
       description = "Forward mails from IMAP folders to XMPP";
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
-      after = [ "network-online.target" "prosody.service" ];
+      after = [ "network-online.target" ];
 
       serviceConfig = {
         ExecStart = "${python}/bin/python ${./xmpp_mail_notifier.py}";

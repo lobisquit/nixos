@@ -14,6 +14,8 @@ in
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
       ./backupper.nix
+      ./xmpp_mail_notifier.nix
+      ./xmpp_rain_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -131,4 +133,10 @@ in
 
   services.doorman.enable = true;
   services.mensaspaziale_bot.enable = false;
+
+  services.xmpp_mail_notifier.enable = true;
+  services.xmpp_rain_notifier = {
+    enable = true;
+    recipients = [ "enrico@lovisotto.it" "erika@lovisotto.it" ];
+  };
 }
