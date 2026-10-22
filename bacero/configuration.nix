@@ -12,6 +12,7 @@ in
       ./monitoring.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
+      ./cgit_wrapper.nix
       ./backupper.nix
       ./xmpp_mail_notifier.nix
       ./xmpp_rain_notifier.nix
@@ -106,6 +107,12 @@ in
 
   services.miniflux_wrapper.enable = true;
 
+  # reachable only from the LAN and the VPN
+  services.cgit_wrapper = {
+    enable = true;
+    authorizedKeys = config.users.users.root.openssh.authorizedKeys.keys;
+  };
+
   services.backupper = {
     enable = true;
     repositories.remote = {
@@ -116,6 +123,8 @@ in
     };
     # declared by miniflux_wrapper.nix
     sources.miniflux.repositories = [ "remote" ];
+    # declared by cgit_wrapper.nix
+    sources.git.repositories = [ "remote" ];
   };
 
   # PostgreSQL, shared by miniflux and beancount_bot: only Unix sockets,
