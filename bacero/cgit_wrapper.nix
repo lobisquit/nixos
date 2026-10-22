@@ -9,13 +9,87 @@ with lib;
 # - Push and clone over SSH, as the `git` user (git-shell only):
 #     git@<fqdn>:<repo>.git
 #
-# A new repository is created on the server with
-#   ssh root_bacero 'sudo -u git git init --bare /var/lib/git/<repo>.git'
-# and the text in <repo>.git/description is shown in the index.
+# Repositories are managed with the commands of the git user:
+#   ssh git@<fqdn> new <repo> [description]
+#   ssh git@<fqdn> desc <repo> <description>
+#   ssh git@<fqdn> list
+#   ssh git@<fqdn> help
+# (or just `ssh git@<fqdn>` for an interactive git-shell with them).
 
 let
   cfg = config.services.cgit_wrapper;
   secrets = config.sops.secrets;
+
+  # Commands available in git-shell, from the git-shell-commands folder
+  # in the home of the git user. Names allowed: letters, digits, . _ -
+  shellCommand = name: text: pkgs.writeShellApplication {
+    inherit name;
+    runtimeInputs = with pkgs; [ git coreutils ];
+    text = ''
+      repos="${cfg.reposDir}"
+
+      repo_dir() {
+        local name="''${1%.git}"
+        if [[ ! "$name" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]*$ ]]; then
+          echo "invalid name: '$1'" >&2
+          exit 1
+        fi
+        echo "$repos/$name.git"
+      }
+
+    '' + text;
+  };
+
+  shellCommands = pkgs.linkFarm "git-shell-commands" (map
+    (cmd: { name = cmd.name; path = "${cmd}/bin/${cmd.name}"; })
+    [
+      (shellCommand "new" ''
+        if [ $# -lt 1 ]; then
+          echo "usage: new <repo> [description]" >&2
+          exit 1
+        fi
+        dir=$(repo_dir "$1"); shift
+        if [ -e "$dir" ]; then
+          echo "$(basename "$dir") already exists" >&2
+          exit 1
+        fi
+        git init --quiet --bare --initial-branch=main "$dir"
+        if [ $# -gt 0 ]; then
+          echo "$*" > "$dir/description"
+        fi
+        name=$(basename "$dir")
+        echo "created $name"
+        echo "  git remote add origin git@${cfg.fqdn}:$name"
+        echo "  git clone git@${cfg.fqdn}:$name"
+      '')
+
+      (shellCommand "desc" ''
+        if [ $# -lt 2 ]; then
+          echo "usage: desc <repo> <description>" >&2
+          exit 1
+        fi
+        dir=$(repo_dir "$1"); shift
+        if [ ! -d "$dir" ]; then
+          echo "$(basename "$dir") does not exist" >&2
+          exit 1
+        fi
+        echo "$*" > "$dir/description"
+      '')
+
+      (shellCommand "list" ''
+        shopt -s nullglob
+        for dir in "$repos"/*.git; do
+          printf '%-30s %s\n' "$(basename "$dir")" "$(head -n1 "$dir/description" 2>/dev/null)"
+        done
+      '')
+
+      # no shellCommand: shellcheck would fail on the unused $repos
+      (pkgs.writeShellScriptBin "help" ''
+        echo "new <repo> [description]   create an empty repository"
+        echo "desc <repo> <description>  change the description shown by cgit"
+        echo "list                       list the repositories"
+      '')
+    ]);
 in
 {
   imports = [ ./nginx_wrapper.nix ./backupper.nix ];
@@ -33,7 +107,7 @@ in
 
     reposDir = mkOption {
       type = types.str;
-      default = "/var/lib/git";
+      default = "/mnt/storage_drive/git";
     };
 
     allowedNetworks = mkOption {
@@ -60,8 +134,9 @@ in
       home = cfg.reposDir;
       createHome = false;
       shell = "${pkgs.git}/bin/git-shell";
-      # no port, agent or X11 forwarding, no pty
-      openssh.authorizedKeys.keys = map (key: "restrict ${key}") cfg.authorizedKeys;
+      # no port, agent or X11 forwarding; the pty is for the
+      # interactive git-shell
+      openssh.authorizedKeys.keys = map (key: "restrict,pty ${key}") cfg.authorizedKeys;
     };
     services.openssh.settings.AllowUsers = [ config.users.users.git.name ];
 
@@ -72,6 +147,9 @@ in
         user = config.users.users.git.name;
         group = config.users.groups.git.name;
         mode = "2750";
+      };
+      "${cfg.reposDir}/git-shell-commands"."L+" = {
+        argument = "${shellCommands}";
       };
     };
 
