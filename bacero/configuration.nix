@@ -110,7 +110,8 @@ in
   # reachable only from the LAN and the VPN
   services.cgit_wrapper = {
     enable = true;
-    authorizedKeys = config.users.users.root.openssh.authorizedKeys.keys;
+    # dedicated key, ~/.ssh/git_lovisotto_it on lobisquit-pc
+    authorizedKeys = [ (lib.fileContents ../shared/git_lovisotto_it.pub) ];
   };
 
   services.backupper = {

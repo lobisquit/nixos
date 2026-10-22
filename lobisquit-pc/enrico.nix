@@ -152,6 +152,13 @@ in
           identitiesOnly = true;
         };
 
+        "git.lovisotto.it" = {
+          hostname = "git.lovisotto.it";
+          user = "git";
+          identityFile = "/home/enrico/.ssh/git_lovisotto_it";
+          identitiesOnly = true;
+        };
+
         root_nasus = {
           hostname = "nasus.home.lovisotto.it";
           user = "root";
