@@ -117,6 +117,7 @@ in
       "d ${cfg.home} 0750 ${qb_user} ${qb_group} -"
       "d ${cfg.home}/Downloads 0750 ${qb_user} ${qb_group} -"
       "d ${cfg.home}/Others 0750 ${qb_user} ${qb_group} -"
+      "d ${config.services.qbittorrent.profileDir} 0750 ${qb_user} ${qb_group} -"
     ];
 
     services.qbittorrent = {
