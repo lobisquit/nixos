@@ -9,7 +9,6 @@ in
       ./backlight_off.nix
       ./hardware-configuration.nix
       ./doorman.nix
-      ./mensaspaziale_bot.nix
       ./monitoring.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
@@ -132,7 +131,6 @@ in
   };
 
   services.doorman.enable = true;
-  services.mensaspaziale_bot.enable = false;
 
   services.xmpp_mail_notifier.enable = true;
   services.xmpp_rain_notifier = {
