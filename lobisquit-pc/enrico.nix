@@ -1,5 +1,16 @@
 { inputs, lib, config, pkgs, ... }:
 
+let
+  # Dizionario hunspell italiano da nixpkgs (contiene it_IT.dic / it_IT.aff)
+  dizionari = "${pkgs.hunspellDicts.it_IT}/share/hunspell";
+
+  # Preferenze per il controllo ortografico, impostate via policy
+  # (non serve dichiarare profili Firefox/Thunderbird)
+  prefsSpellcheck = {
+    "spellchecker.dictionary_path" = { Value = dizionari; Status = "default"; };
+    "spellchecker.dictionary" = { Value = "it-IT"; Status = "default"; };
+  };
+in
 {
   nixpkgs = {
     overlays = [
@@ -42,6 +53,8 @@
   programs = {
     thunderbird = {
       enable = true;
+      languagePacks = [ "it" ];
+      policies.Preferences = prefsSpellcheck;
     };
 
     git = {
@@ -74,6 +87,12 @@
     firefox = {
       enable = true;
       configPath = "${config.xdg.configHome}/mozilla/firefox";
+      languagePacks = [ "it" ];
+      policies = {
+        # il modulo Firefox installa il langpack ma non lo attiva
+        RequestedLocales = [ "it" ];
+        Preferences = prefsSpellcheck;
+      };
     };
 
     emacs.enable = true;
