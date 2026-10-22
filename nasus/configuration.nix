@@ -99,6 +99,9 @@
       # declared by xmpp_server.nix
       prosody.repositories = [ "remote" "local" ];
       prosody_uploads.repositories = [ "local" ];
+
+      # declared by xmpp_irc.nix (a few KB: settings and SASL passwords)
+      biboumi.repositories = [ "remote" "local" ];
     };
   };
 
