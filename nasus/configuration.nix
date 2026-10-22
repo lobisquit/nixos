@@ -9,7 +9,7 @@
       ./backupper.nix
       ./monitoring.nix
       ./navidrome_wrapper.nix
-      ./transmission_wrapper.nix
+      ./qbittorrent_wrapper.nix
       ./samba_wrapper.nix
       ./mail_downloader.nix
       ./cal_card_downloader.nix
@@ -122,9 +122,9 @@
 
   services.backlight_off.enable = true;
 
-  services.transmission_wrapper = {
+  services.qbittorrent_wrapper = {
     enable = true;
-    fqdn = "transmission.home.lovisotto.it";
+    fqdn = "torrent.home.lovisotto.it";
     allowedNetworks = [ "10.1.0.0/16" "10.3.0.0/16" ];
   };
 
