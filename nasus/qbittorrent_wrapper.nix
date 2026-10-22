@@ -173,8 +173,24 @@ in
       };
     };
 
-    systemd.services.qbittorrent.serviceConfig.ExecStartPre =
-      mkAfter [ "${inject_password}" ];
+    systemd.services.qbittorrent.serviceConfig = {
+      ExecStartPre = mkAfter [ "${inject_password}" ];
+
+      # Hardening on top of the upstream module, which leaves the whole
+      # file system visible and writable wherever the user has permission.
+      # Only the qBittorrent folder is visible under /mnt (the storage
+      # drive holds other services' data) and the rest is read-only.
+      ProtectSystem = mkForce "strict";
+      TemporaryFileSystem = [ "/mnt:ro" ];
+      BindPaths = [ cfg.home ];
+      # new files readable by the group only, as the folders are
+      UMask = "0027";
+      # on top of @system-service: no privileged or debugging system calls
+      SystemCallFilter = [ "~@privileged" "~@debug" "~@mount" "~@cpu-emulation" "~@obsolete" ];
+      SystemCallErrorNumber = "EPERM";
+      DevicePolicy = "closed";
+      KeyringMode = "private";
+    };
 
     networking.firewall = {
       allowedTCPPorts = [ cfg.peerPort ];
