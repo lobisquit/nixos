@@ -100,8 +100,11 @@
       prosody.repositories = [ "remote" "local" ];
       prosody_uploads.repositories = [ "local" ];
 
-      # declared by xmpp_irc.nix (a few KB: settings and SASL passwords)
+      # declared by xmpp_irc.nix
       biboumi.repositories = [ "remote" "local" ];
+
+      # declared by xmpp_telegram.nix
+      slidgram.repositories = [ "remote" "local" ];
     };
   };
 

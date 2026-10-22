@@ -6,9 +6,15 @@ let
   domain = xmpp.domain;
   jid = "telegram.${domain}";
   dataDir = "${xmpp.storageDir}/slidgram";
+  # slidge keeps everything in a folder named after the gateway JID
+  gatewayDir = "${dataDir}/${jid}";
+  # User of the container: :U makes the volume belong to it
+  containerUid = "10000";
   secrets = config.sops.secrets;
 in
 {
+  imports = [ ./backupper.nix ];
+
   options.services.xmpp_telegram = {
     enable = lib.mkEnableOption "the Telegram gateway (slidgram) for the XMPP server";
 
@@ -26,6 +32,18 @@ in
       type = lib.types.bool;
       default = false;
       description = "Verbose gateway logs (slidge and pyrogram), e.g. to see incoming Telegram updates.";
+    };
+
+    backupFolder = lib.mkOption {
+      type = lib.types.str;
+      default = "/var/lib/slidgram_backup";
+      description = "Where a consistent copy of the slidgram databases is written before each backup.";
+    };
+
+    backupGroup = lib.mkOption {
+      type = lib.types.str;
+      default = "slidgram_backup";
+      description = "Group that can read the copy (backupper joins it).";
     };
   };
 
@@ -127,6 +145,84 @@ in
 
     systemd.services.podman-slidgram.serviceConfig = {
       LogRateLimitIntervalSec = 0;
+    };
+
+    # The folder contains the Telegram session of every registered user,
+    # i.e. full access to their accounts: only the container user can
+    # enter it (slidge creates its files world-readable).
+    systemd.tmpfiles.rules = [
+      "d ${dataDir} 0700 ${containerUid} ${containerUid} - -"
+    ];
+
+    # Backups. Only the databases are copied: the slidge one (registrations,
+    # settings, Telegram <-> XMPP message IDs for replies and reactions), the
+    # Telegram sessions (<user jid>.session, SQLite as well) and the
+    # reactions. Avatars and downloads are a cache. The copies are made
+    # with sqlite3 .backup, so they are consistent while the gateway runs.
+    users.groups.${cfg.backupGroup} = { };
+    # Readable only by root and by the backup group; the setgid bit makes
+    # new files belong to the backup group.
+    systemd.tmpfiles.settings.slidgram_backup = {
+      "${cfg.backupFolder}".d = {
+        user = "root";
+        group = cfg.backupGroup;
+        mode = "2750";
+      };
+    };
+
+    systemd.services.slidgram_backup_db = {
+      description = "Consistent copy of the slidgram databases for the backups";
+      # restore: stop podman-slidgram, copy the files to ${gatewayDir},
+      # chown -R ${containerUid}:${containerUid} ${dataDir}, start podman-slidgram
+
+      unitConfig.RequiresMountsFor = [ dataDir ];
+      path = [ pkgs.sqlite ];
+      serviceConfig = {
+        Type = "oneshot";
+        UMask = "0027";
+
+        # Only the gateway data and the backup folder are visible. The data
+        # is writable because SQLite may need it to read a database in WAL
+        # mode or with a journal left by a crash.
+        TemporaryFileSystem = "/";
+        PrivateNetwork = true;
+        PrivateTmp = true;
+        BindPaths = [ dataDir cfg.backupFolder ];
+        BindReadOnlyPaths = [ "/nix/store" ];
+      };
+
+      # Write each copy to a temporary file and rename it only on success,
+      # so a failed copy never replaces the previous good one; copies of
+      # databases that no longer exist are removed.
+      script = ''
+        set -o nounset -o pipefail
+        shopt -s nullglob
+        out="${cfg.backupFolder}"
+        cd "${gatewayDir}"
+
+        keep=()
+        for db in *.sqlite *.session; do
+          tmp=$(mktemp "$out/.$db.XXXXXX")
+          trap 'rm -f "$tmp"' EXIT
+          sqlite3 "$db" ".backup '$tmp'"
+          chmod 0640 "$tmp"
+          mv -f "$tmp" "$out/$db"
+          trap - EXIT
+          keep+=("$db")
+        done
+
+        for f in "$out"/*; do
+          name=$(basename "$f")
+          [[ " ''${keep[*]} " == *" $name "* ]] || rm -f "$f"
+        done
+      '';
+    };
+
+    # Repositories are chosen by the host.
+    services.backupper.sources.slidgram = {
+      paths = [ cfg.backupFolder ];
+      groups = [ cfg.backupGroup ];
+      runBefore = [ "slidgram_backup_db.service" ];
     };
   };
 }
