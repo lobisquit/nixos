@@ -80,7 +80,6 @@ in
       extraModules = [ "privilege" ];
 
       # Let the gateway manage contact lists and bookmarks of ${domain} users
-      # (only affects users who register with the gateway)
       virtualHosts.${domain}.extraConfig = ''
         privileged_entities = {
           ["${jid}"] = {
