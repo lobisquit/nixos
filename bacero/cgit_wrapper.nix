@@ -40,6 +40,33 @@ let
     '' + text;
   };
 
+  # cgit has no mobile layout: on small screens wide tables scroll on
+  # their own instead of the whole page, commit messages and diffs wrap,
+  # and the header loses the logo and the search forms.
+  mobileHead = pkgs.writeText "cgit-head.html" ''
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      @media (max-width: 720px) {
+        div#cgit { margin: 0; padding: 0 6px; }
+        table#header td.logo,
+        table#header td.form,
+        table.tabs td.form { display: none; }
+        table#header td.main { font-size: 160%; }
+        table.tabs td { white-space: normal; }
+        table.tabs td a { display: inline-block; padding: 4px 6px; }
+        table.list, table.diffstat, table.blob, table.diff,
+        table#downloads, div#summary {
+          display: block;
+          max-width: 100%;
+          overflow-x: auto;
+        }
+        div.commit-subject, div.commit-msg, table.list td.logmsg,
+        table.diff td div { white-space: pre-wrap; overflow-wrap: anywhere; }
+        div.path { overflow-wrap: anywhere; }
+      }
+    </style>
+  '';
+
   shellCommands = pkgs.linkFarm "git-shell-commands" (map
     (cmd: { name = cmd.name; path = "${cmd}/bin/${cmd.name}"; })
     [
@@ -184,6 +211,8 @@ in
         readme = [ ":README.md" ":README" ];
         about-filter = "${config.services.cgit."${cfg.fqdn}".package}/lib/cgit/filters/about-formatting.sh";
         source-filter = "${config.services.cgit."${cfg.fqdn}".package}/lib/cgit/filters/syntax-highlighting.py";
+        # usable on phones, on top of the default cgit.css
+        head-include = "${mobileHead}";
       };
     };
 
