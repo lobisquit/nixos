@@ -131,6 +131,13 @@ in
       enableDefaultConfig = false;
 
       settings = {
+        "git.lovisotto.it" = {
+          hostname = "git.lovisotto.it";
+          user = "git";
+          identityFile = "/home/enrico/.ssh/git_lovisotto_it";
+          identitiesOnly = true;
+        };
+
         "git.sr.ht" = {
           hostname = "git.sr.ht";
           user = "git";
