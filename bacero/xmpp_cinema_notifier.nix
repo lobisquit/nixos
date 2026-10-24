@@ -22,7 +22,7 @@ in
 
     jid = lib.mkOption {
       type = lib.types.str;
-      default = "uscite_cinema@${cfg.domain}";
+      default = "cinema@${cfg.domain}";
       description = "Bot account that sends the list.";
     };
 

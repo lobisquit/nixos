@@ -148,8 +148,9 @@ in
     enable = true;
     recipients = [ "enrico@lovisotto.it" "erika@lovisotto.it" ];
   };
+
   services.xmpp_cinema_notifier = {
     enable = true;
-    room = "cinema@conference.lovisotto.it";
+    room = "uscite_al_cinema@conference.lovisotto.it";
   };
 }
