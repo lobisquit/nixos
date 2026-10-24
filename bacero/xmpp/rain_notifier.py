@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Rain alert over XMPP. Runs once (started by a systemd timer) and exits.
 
-    xmpp_rain_notifier.py morning
+    rain_notifier.py morning
         Checks every window in WINDOWS; if any will be rainy, sends one
         message listing them. Remembers which windows were announced.
 
-    xmpp_rain_notifier.py afternoon
+    rain_notifier.py afternoon
         Checks only AFTERNOON_WINDOWS and sends a message only for the
         windows that are rainy now but were NOT announced this morning
         (forecast changed). Stays silent otherwise.

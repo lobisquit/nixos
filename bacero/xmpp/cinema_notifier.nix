@@ -11,7 +11,7 @@ in
       a weekly message to an XMPP group chat with the films coming out in
       Italian cinemas (source: TMDB). The TMDB read access token and the bot
       password are in the sops secret `cinema_notifier_configuration`;
-      the format is described at the top of xmpp_cinema_notifier.py
+      the format is described at the top of xmpp/cinema_notifier.py
     '';
 
     domain = lib.mkOption {
@@ -82,7 +82,7 @@ in
 
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${python}/bin/python ${./xmpp_cinema_notifier.py}";
+        ExecStart = "${python}/bin/python ${./cinema_notifier.py}";
         DynamicUser = true;
         LoadCredential = "configuration:${secrets.cinema_notifier_configuration.path}";
 

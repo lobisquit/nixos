@@ -13,7 +13,7 @@ let
   uploadsDir = prosodyHostDir config.services.prosody.httpFileShare.domain;
 in
 {
-  imports = [ ./backupper.nix ];
+  imports = [ ../backupper.nix ];
 
   options.services.xmpp_server = {
     enable = lib.mkEnableOption "the Prosody XMPP server";

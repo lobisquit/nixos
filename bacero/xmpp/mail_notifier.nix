@@ -11,7 +11,7 @@ in
       forwarding of new mails from IMAP folders to XMPP.
       Everything (accounts, folders, subject blacklists) is in the
       sops secret `mail_notifier_configuration`; the format is
-      described at the top of xmpp_mail_notifier.py
+      described at the top of xmpp/mail_notifier.py
     '';
   };
 
@@ -28,7 +28,7 @@ in
       after = [ "network-online.target" ];
 
       serviceConfig = {
-        ExecStart = "${python}/bin/python ${./xmpp_mail_notifier.py}";
+        ExecStart = "${python}/bin/python ${./mail_notifier.py}";
         DynamicUser = true;
         StateDirectory = "xmpp_mail_notifier"; # remembers the last seen mails
         LoadCredential = "configuration:${secrets.mail_notifier_configuration.path}";

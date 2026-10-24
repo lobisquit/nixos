@@ -7,7 +7,7 @@ let
   stateDir = "/var/lib/private/biboumi";
 in
 {
-  imports = [ ./backupper.nix ];
+  imports = [ ../backupper.nix ];
 
   options.services.xmpp_irc = {
     enable = lib.mkEnableOption "Biboumi IRC gateway";

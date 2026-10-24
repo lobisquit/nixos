@@ -13,10 +13,10 @@
       ./samba_wrapper.nix
       ./mail_downloader.nix
       ./cal_card_downloader.nix
-      ./xmpp_server.nix
-      ./xmpp_irc.nix
-      ./xmpp_telegram.nix
-      ./xmpp_transcriber_bot.nix
+      ./xmpp/server.nix
+      ./xmpp/irc.nix
+      ./xmpp/telegram.nix
+      ./xmpp/transcriber_bot.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -96,14 +96,14 @@
       mail.repositories = [ "remote" "local" ];
       cal_card.repositories = [ "remote" "local" ];
 
-      # declared by xmpp_server.nix
+      # declared by xmpp/server.nix
       prosody.repositories = [ "remote" "local" ];
       prosody_uploads.repositories = [ "local" ];
 
-      # declared by xmpp_irc.nix
+      # declared by xmpp/irc.nix
       biboumi.repositories = [ "remote" "local" ];
 
-      # declared by xmpp_telegram.nix
+      # declared by xmpp/telegram.nix
       slidgram.repositories = [ "remote" "local" ];
     };
   };

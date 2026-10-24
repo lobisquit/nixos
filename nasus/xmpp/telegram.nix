@@ -13,7 +13,7 @@ let
   secrets = config.sops.secrets;
 in
 {
-  imports = [ ./backupper.nix ];
+  imports = [ ../backupper.nix ];
 
   options.services.xmpp_telegram = {
     enable = lib.mkEnableOption "the Telegram gateway (slidgram) for the XMPP server";

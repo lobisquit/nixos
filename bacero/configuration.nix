@@ -14,9 +14,9 @@ in
       ./miniflux_wrapper.nix
       ./cgit_wrapper.nix
       ./backupper.nix
-      ./xmpp_mail_notifier.nix
-      ./xmpp_rain_notifier.nix
-      ./xmpp_cinema_notifier.nix
+      ./xmpp/mail_notifier.nix
+      ./xmpp/rain_notifier.nix
+      ./xmpp/cinema_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;

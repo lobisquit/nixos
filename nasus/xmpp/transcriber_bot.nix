@@ -94,7 +94,7 @@ in
       unitConfig.RequiresMountsFor = [ cfg.modelDir ];
 
       serviceConfig = {
-        ExecStart = "${python}/bin/python ${./xmpp_transcriber_bot.py}";
+        ExecStart = "${python}/bin/python ${./transcriber_bot.py}";
         User = "transcriber_bot";
         Group = "transcriber_bot";
         ReadWritePaths = [ cfg.modelDir ];

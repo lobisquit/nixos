@@ -24,7 +24,7 @@ let
 
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${python}/bin/python ${./xmpp_rain_notifier.py} ${mode}";
+      ExecStart = "${python}/bin/python ${./rain_notifier.py} ${mode}";
       DynamicUser = true;
       User = "xmpp_rain_notifier"; # same name = same UID for both units
       StateDirectory = "xmpp_rain_notifier"; # what the morning run announced
@@ -44,7 +44,7 @@ in
       one check in the morning, plus one in the afternoon that warns
       only if the forecast changed. Position and bot password are in the
       sops secret `rain_notifier_configuration`; the format is described
-      at the top of xmpp_rain_notifier.py
+      at the top of xmpp/rain_notifier.py
     '';
 
     domain = lib.mkOption {
