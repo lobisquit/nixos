@@ -14,7 +14,7 @@ arthouse films may be missing or have a stale date.
 Configuration: the YAML file $CREDENTIALS_DIRECTORY/configuration
 (provided by systemd), like this
 
-    tmdb_api_key: 0123456789abcdef   # "API Key" from TMDB settings → API
+    tmdb_token: eyJhbGciOi...        # "API Read Access Token" from TMDB settings → API
     xmpp_password: secret
     room_password: secret            # optional, only for protected rooms
 
@@ -66,17 +66,18 @@ with open(os.path.join(os.environ["CREDENTIALS_DIRECTORY"], "configuration")) as
 # ---------------------------------------------------------------- TMDB
 
 def tmdb(path, **params):
-    query = urllib.parse.urlencode({"api_key": CONF["tmdb_api_key"],
-                                    "language": LANGUAGE, **params})
-    url = f"https://api.themoviedb.org/3{path}?{query}"
+    query = urllib.parse.urlencode({"language": LANGUAGE, **params})
+    request = urllib.request.Request(
+        f"https://api.themoviedb.org/3{path}?{query}",
+        headers={"Authorization": f"Bearer {CONF['tmdb_token']}",
+                 "Accept": "application/json"})
     for attempt in range(5):
         try:
-            with urllib.request.urlopen(url, timeout=30) as response:
+            with urllib.request.urlopen(request, timeout=30) as response:
                 return json.load(response)
         except Exception:
             if attempt == 4:
                 raise
-            # don't log the URL: it contains the API key
             log.exception("TMDB request %s failed, retrying in 60 s", path)
             time.sleep(60)
 

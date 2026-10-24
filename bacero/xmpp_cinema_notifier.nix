@@ -9,7 +9,7 @@ in
   options.services.xmpp_cinema_notifier = {
     enable = lib.mkEnableOption ''
       a weekly message to an XMPP group chat with the films coming out in
-      Italian cinemas (source: TMDB). The TMDB API key and the bot
+      Italian cinemas (source: TMDB). The TMDB read access token and the bot
       password are in the sops secret `cinema_notifier_configuration`;
       the format is described at the top of xmpp_cinema_notifier.py
     '';
