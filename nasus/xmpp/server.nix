@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   cfg = config.services.xmpp_server;
@@ -11,6 +11,7 @@ let
   # upload%2elovisotto%2eit): for the upload component, the shared files.
   prosodyHostDir = host: "${prosodyDir}/${lib.replaceStrings [ "." "-" "_" ] [ "%2e" "%2d" "%5f" ] host}";
   uploadsDir = prosodyHostDir config.services.prosody.httpFileShare.domain;
+  restrictFederation = cfg.federationWhitelist != [ ];
 in
 {
   imports = [ ../backupper.nix ];
@@ -36,6 +37,28 @@ in
       description = "Allow talking to users on other XMPP servers (port 5269).";
     };
 
+    federationWhitelist = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "example.org" "conference.example.org" ];
+      description = ''
+        If non-empty, federate only with these domains (mod_s2s_whitelist);
+        connections to and from any other server are refused. Subdomains
+        are separate servers: list e.g. conference.example.org too to join
+        rooms there. Empty means open federation. Requires federation = true.
+      '';
+    };
+
+    communityModules = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      description = ''
+        Prosody community modules to build in and enable. Each XMPP service
+        adds its own (e.g. the Telegram gateway needs "privilege"), since
+        services.prosody.package can only be set once.
+      '';
+    };
+
     storageDir = lib.mkOption {
       type = lib.types.str;
       default = "/mnt/storage_drive/xmpp";
@@ -47,6 +70,15 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    services.xmpp_server.communityModules = lib.optionals restrictFederation [ "s2s_whitelist" ];
+
+    assertions = [
+      {
+        assertion = restrictFederation -> cfg.federation;
+        message = "services.xmpp_server.federationWhitelist requires services.xmpp_server.federation = true.";
+      }
+    ];
+
     sops.secrets.desec_token = { };
 
     security.acme = {
@@ -72,6 +104,10 @@ in
       allowRegistration = false; # accounts are created with prosodyctl
 
       s2sSecureAuth = true;
+
+      # Build Prosody with the community modules requested by the XMPP
+      # services; the NixOS module enables them automatically.
+      package = pkgs.prosody.override { withCommunityModules = lib.unique cfg.communityModules; };
 
       ssl.cert = "${certDir}/fullchain.pem";
       ssl.key = "${certDir}/key.pem";
@@ -105,6 +141,10 @@ in
 
         -- No federation: don't talk to other XMPP servers
         modules_disabled = { "s2s" }
+      '' + lib.optionalString (cfg.federation && restrictFederation) ''
+
+        -- Federation only with these servers
+        s2s_whitelist = { ${lib.concatMapStringsSep ", " (d: ''"${d}"'') cfg.federationWhitelist} }
       '';
     };
 

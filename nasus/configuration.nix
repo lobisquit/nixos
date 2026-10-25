@@ -160,6 +160,7 @@
   services.xmpp_server = {
     enable = true;
     federation = false;
+    # federationWhitelist = [ "example.org" "conference.example.org" ];
   };
 
   services.xmpp_telegram = {

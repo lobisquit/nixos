@@ -71,13 +71,12 @@ in
       SLIDGE__SLIDGRAM_API_HASH=${config.sops.placeholder.telegram_api_hash}
     '';
 
+    # mod_privilege (XEP-0356) is a community module: build Prosody with it included
+    services.xmpp_server.communityModules = [ "privilege" ];
+
     services.prosody = {
       # The config check runs at build time, where the secret file doesn't exist yet
       checkConfig = false;
-
-      # mod_privilege (XEP-0356) is a community module: build Prosody with it included
-      package = pkgs.prosody.override { withCommunityModules = [ "privilege" ]; };
-      extraModules = [ "privilege" ];
 
       # Let the gateway manage contact lists and bookmarks of ${domain} users
       virtualHosts.${domain}.extraConfig = ''
