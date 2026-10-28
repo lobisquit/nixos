@@ -1,0 +1,45 @@
+# Weekly meal plan sent by meal_plan_notifier.py.
+# One entry per weekday, each with the four meals in the order they are shown.
+# Edit freely: the file is read at every run, no secret here.
+
+lunedì:
+  colazione: 50 g di pane multicereali tostato con 1 uovo strapazzato o sodo + 100 g di papaia
+  pranzo: 50 g di cous cous con 120 g di lenticchie rosse cotte + verdura + 2 cucchiaini di olio EVO
+  spuntino: 1 frutto con 10 g di frutta secca
+  cena: 200 g di filetti di branzino al forno con verdura + 200 g di patate dolci + verdura + 2 cucchiaini di olio EVO
+
+martedì:
+  colazione: "Porridge overnight: 30 g di fiocchi di avena con latte vegetale senza zuccheri aggiunti q.b. + 1 cucchiaino di cannella + 2 cucchiaini di mix di semi + 1 kiwi giallo"
+  pranzo: 250 g di patate dolci con 2 uova sode + verdura + 2 cucchiaini di olio EVO
+  spuntino: 1 frutto con 10 g di frutta secca
+  cena: 150 g di tofu al forno con verdura + 40 g di riso venere + 2 cucchiaini di olio EVO
+
+mercoledì:
+  colazione: 50 g di pane multicereali tostato con 1 uovo strapazzato o sodo + 100 g di papaia
+  pranzo: 50 g di quinoa con 1 filetto di salmone selvaggio dell'Alaska (surgelato) + verdura + 50 g di avocado
+  spuntino: 15 g di parmigiano reggiano con 2 wasa
+  cena: Vellutata di zucca con 180 g di ceci cotti + verdura + 2 cucchiaini di olio EVO
+
+giovedì:
+  colazione: 150 g di yogurt kefir bianco con 30 g di farro o quinoa soffiati + 10 g di cioccolato fondente >85% + 1 kiwi giallo
+  pranzo: 50 g di quinoa con 1 filetto di salmone selvaggio dell'Alaska (surgelato) + verdura + 50 g di avocado
+  spuntino: 20 g di cioccolato fondente >85%
+  cena: 70 g di pasta di lenticchie o legumotti con verdura + 100 g di ricotta di capra + 2 cucchiaini di olio EVO
+
+venerdì:
+  colazione: "Porridge overnight: 30 g di fiocchi di avena con latte vegetale senza zuccheri aggiunti q.b. + 1 cucchiaino di cannella + 2 cucchiaini di mix di semi + 1 kiwi giallo"
+  pranzo: Insalata con 180 g di ceci cotti + 4-5 wasa + 2 cucchiaini di olio EVO
+  spuntino: 1 frutto con 10 g di frutta secca
+  cena: 180 g di scaloppine di pollo alla curcuma + 40 g di riso venere + verdura + 2 cucchiaini di olio EVO
+
+sabato:
+  colazione: "Pancake: 40 g di farina di avena con 100 g di albume + latte vegetale q.b. + 2 cucchiaini di crema di mandorle 100% + ½ mango o banana"
+  pranzo: 150 g di merluzzo con zenzero e limone + verdura + 2 cucchiaini di olio EVO
+  spuntino: 150 g di yogurt kefir bianco
+  cena: Pasto libero accompagnato da abbondante verdura
+
+domenica:
+  colazione: "Pancake: 40 g di farina di avena con 100 g di albume + latte vegetale q.b. + 2 cucchiaini di crema di mandorle 100% + ½ mango o banana"
+  pranzo: 70 g di pasta integrale con 100 g di ragù di tofu + verdura + 2 cucchiaini di olio EVO
+  spuntino: 20 g di cioccolato fondente >85%
+  cena: 180 g di platessa gratinata al forno + verdura + 2 cucchiaini di olio EVO

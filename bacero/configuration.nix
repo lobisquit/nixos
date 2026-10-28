@@ -17,6 +17,7 @@ in
       ./xmpp/mail_notifier.nix
       ./xmpp/rain_notifier.nix
       ./xmpp/cinema_notifier.nix
+      ./xmpp/meal_plan_notifier.nix
     ];
 
   boot.loader.systemd-boot.enable = true;
@@ -153,4 +154,6 @@ in
     enable = true;
     room = "uscite_al_cinema@conference.lovisotto.it";
   };
+
+  services.xmpp_meal_plan_notifier.enable = true;
 }
