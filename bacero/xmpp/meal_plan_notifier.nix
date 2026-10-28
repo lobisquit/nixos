@@ -22,7 +22,7 @@ in
 
     jid = lib.mkOption {
       type = lib.types.str;
-      default = "dieta@${cfg.domain}";
+      default = "piano_alimentare@${cfg.domain}";
       description = "Bot account that sends the plan.";
     };
 
