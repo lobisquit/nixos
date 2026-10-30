@@ -102,6 +102,10 @@ in
                 auth_username: $USERNAME
                 auth_identity: $IDENTITY
                 auth_password: $PASSWORD
+                # lets alert_mail_cleaner (on bacero) find the copies of
+                # these mails in the Sent folder of the mailbox
+                headers:
+                  X-Alertmanager-Host: ${config.networking.hostName}
           '';
         environmentFile = secrets.alertmanager_credentials.path;
       };

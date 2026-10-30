@@ -10,6 +10,7 @@ in
       ./hardware-configuration.nix
       ./doorman.nix
       ./monitoring.nix
+      ./alert_mail_cleaner.nix
       ./podcasts_fetcher.nix
       ./miniflux_wrapper.nix
       ./cgit_wrapper.nix
@@ -94,6 +95,14 @@ in
   sops.age.keyFile = "/root/.config/sops/age/keys.txt";
 
   services.monitoring.enable = true;
+
+  # Alertmanager mails of every host are deleted from the Sent folder
+  # after a week. Dry run for now: check the log
+  # (journalctl -u alert_mail_cleaner), then set it to false.
+  services.alert_mail_cleaner = {
+    enable = true;
+    dryRun = true;
+  };
 
   # duplicate with doorman if enabled
   services.pulseaudio.enable = true;
