@@ -68,7 +68,7 @@ in
 
     startAt = lib.mkOption {
       type = lib.types.str;
-      default = "*-*-* 08:00:00";
+      default = "Mon..Fri *-*-* 08:00:00";
       description = "When to run the morning check (systemd OnCalendar format).";
     };
 
@@ -80,7 +80,7 @@ in
 
     afternoonStartAt = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
-      default = "*-*-* 15:00:00";
+      default = "Mon..Fri *-*-* 15:00:00";
       description = ''
         When to run the afternoon check (systemd OnCalendar format);
         null disables it.
