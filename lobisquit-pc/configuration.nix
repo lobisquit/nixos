@@ -24,6 +24,9 @@
   boot.tmp.cleanOnBoot = true;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
+  # Otherwise KDE will not open the choice menu on power button press
+  services.logind.settings.Login.HandlePowerKey = "ignore";
+
   services.printing = {
     enable = true;
     drivers = [ pkgs.epson-escpr ];
