@@ -1,10 +1,15 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   programs.plasma = {
     enable = true;
 
-    workspace.clickItemTo = "select";
+    workspace = {
+      clickItemTo = "select";
+
+      wallpaperFillMode = "preserveAspectCrop";
+      wallpaper = "${pkgs.kdePackages.plasma-workspace-wallpapers}/share/wallpapers/SafeLanding/contents/images/5120x2880.jpg";
+    };
 
     input = {
       keyboard.layouts = [

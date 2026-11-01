@@ -19,6 +19,8 @@
   nixpkgs.config.allowUnfree = true;
   system.stateVersion = "23.11";
 
+  boot.blacklistedKernelModules = [ "tiny_power_button" ];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.tmp.cleanOnBoot = true;
