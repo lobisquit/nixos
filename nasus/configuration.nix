@@ -79,6 +79,16 @@
       # the B2 key of this host cannot delete: retention is applied
       # from the PC with `make prune_remote`
       prune = false;
+      # Shared with bacero: check takes an exclusive lock, so only nasus
+      # checks it, in its own unit, when the 03:00 backups of both hosts
+      # are over (they wait for each other anyway, with --retry-lock).
+      # Every day it also reads 1/30 of the data: all of it in a month,
+      # well within the free B2 egress (3x the stored data per month).
+      check = {
+        afterBackup = false;
+        startAt = "*-*-* 06:00:00";
+        readDataRotation = 30;
+      };
     };
     repositories.local = {
       localPath = "/mnt/backup_hdd/home/restic-repo";

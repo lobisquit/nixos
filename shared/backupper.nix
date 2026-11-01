@@ -10,9 +10,18 @@
 # backs up each source with its own tag, applies the retention policy per
 # tag, then runs a single prune and check. The unit only sees, read-only,
 # the folders of the sources sent to that repository.
+#
+# The check can instead run in its own `check_<repository>` unit, at its
+# own time: useful for a repository shared by several hosts, where only
+# one of them should check it, while no backup is running. Every restic
+# command waits (--retry-lock) instead of failing when another host holds
+# the lock.
 
 let
   inherit (lib) mkOption mkEnableOption mkIf types;
+
+  # how long a restic command waits for a lock held by someone else
+  retryLock = "2h";
 
   cfg = config.services.backupper;
   secrets = config.sops.secrets;
@@ -126,6 +135,42 @@ let
         '';
       };
 
+      check = {
+        afterBackup = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Run restic check at the end of backup_<name>. Turn it off for a
+            repository shared by several hosts: check takes an exclusive
+            lock and verifies the whole repository, the other hosts'
+            snapshots included, so one host checking it is enough.
+          '';
+        };
+
+        startAt = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "*-*-* 06:00:00";
+          description = ''
+            systemd calendar expression of a separate check_<name> unit;
+            null means no such unit. Pick a time when no backup of any
+            host is running.
+          '';
+        };
+
+        readDataRotation = mkOption {
+          type = types.nullOr types.ints.positive;
+          default = null;
+          example = 30;
+          description = ''
+            In check_<name>, also read and verify the content of 1/N of the
+            pack files, a different part every day: the whole repository is
+            read every N days. null checks only the structure (index,
+            snapshots, trees), never the file content.
+          '';
+        };
+      };
+
       keep = mkOption {
         type = types.attrsOf types.int;
         # the single most recent snapshot of each of the last 7 days,
@@ -136,37 +181,118 @@ let
     };
   };
 
+  checkedRepositories = lib.filterAttrs (_: repo: repo.check.startAt != null) cfg.repositories;
+
   sourcesFor = repoName:
     lib.filter (s: lib.elem repoName s.repositories) (lib.attrValues enabledSources);
 
   keepArgs = keep:
     lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "--keep-${k} ${toString v}") keep);
 
-  mkScript = repoName: repo: pkgs.writeShellScript "backup-${repoName}" ''
+  # every command waits for the lock instead of failing at once
+  restic = "restic --retry-lock ${retryLock}";
+
+  mkBackupScript = repoName: repo: pkgs.writeShellScript "backup-${repoName}" ''
     set -o errexit -o nounset -o pipefail -o xtrace
 
     ${lib.concatMapStrings (s: ''
-      restic backup --verbose ${lib.escapeShellArgs (
+      ${restic} backup --verbose ${lib.escapeShellArgs (
         [ "--tag" s.tag "--host" config.networking.hostName ]
         ++ lib.concatMap (e: [ "--exclude" e ]) s.exclude
         ++ s.paths
       )}
     '' + lib.optionalString repo.prune ''
-      restic forget --verbose --tag ${lib.escapeShellArg s.tag} ${keepArgs repo.keep}
+      ${restic} forget --verbose --tag ${lib.escapeShellArg s.tag} ${keepArgs repo.keep}
     '' + "\n") (sourcesFor repoName)}
-    ${lib.optionalString repo.prune "restic prune --verbose"}
-    restic check --verbose
+    ${lib.optionalString repo.prune "${restic} prune --verbose"}
+    ${lib.optionalString repo.check.afterBackup "${restic} check --verbose"}
   '';
 
-  mkService = repoName: repo:
+  mkCheckScript = repoName: repo: pkgs.writeShellScript "check-${repoName}" (''
+    set -o errexit -o nounset -o pipefail -o xtrace
+
+  '' + (if repo.check.readDataRotation == null then ''
+    ${restic} check --verbose
+  '' else
+    let n = toString repo.check.readDataRotation; in ''
+    # a different 1/${n} of the pack files every day, by day of the year
+    # (10# avoids reading 008 and 009 as invalid octal numbers)
+    part=$(( 10#$(date +%j) % ${n} + 1 ))
+    ${restic} check --verbose --read-data-subset "$part/${n}"
+  ''));
+
+  # Sandbox shared by backup_<name> and check_<name>: an empty, read-only
+  # root where only the given paths are visible.
+  sandbox = repo: { readOnly ? [ ], hidden ? [ ] }:
+    let
+      # a repository on a local path does not need any network access
+      isLocal = repo.localPath != null;
+    in
+    {
+      Type = "oneshot";
+      User = user.name;
+
+      EnvironmentFile = [ secrets.${repo.secret}.path ];
+      Environment = map escapeUnit ([ "RESTIC_CACHE_DIR=${cacheDir}" ]
+        ++ lib.optional isLocal "RESTIC_REPOSITORY=${repo.localPath}");
+
+      # Empty, read-only root: the only things visible are the bind
+      # mounts below. The sops secret is read by systemd through
+      # EnvironmentFile before the namespace is set up, so it is not
+      # mounted at all.
+      TemporaryFileSystem = "/:ro";
+      PrivateTmp = true;
+
+      # Read-only: the Nix store, the files restic needs to run and
+      # exactly the given folders (the sources, for a backup).
+      BindReadOnlyPaths = map escapeUnit ([
+        "/nix/store"
+        "/etc/passwd" # restic stores the user name in each snapshot
+      ] ++ lib.optionals (!isLocal) [
+        "/etc/resolv.conf"
+        "/etc/ssl/certs/ca-certificates.crt"
+      ] ++ readOnly);
+
+      # Excluded folders are not even readable ("-": ignore if missing).
+      InaccessiblePaths = map (p: "-${escapeUnit p}") hidden;
+
+      # Read-write: only the restic cache and, if local, the repository.
+      BindPaths = map escapeUnit ([ cacheDir ] ++ lib.optional isLocal repo.localPath);
+
+      # Network only for remote repositories.
+      PrivateNetwork = isLocal;
+      RestrictAddressFamilies =
+        if isLocal then [ "AF_UNIX" ] else [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+
+      # Generic hardening: no privileges, no devices, no kernel tweaks.
+      NoNewPrivileges = true;
+      CapabilityBoundingSet = "";
+      PrivateDevices = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectKernelLogs = true;
+      ProtectControlGroups = true;
+      ProtectClock = true;
+      ProtectHostname = true;
+      ProtectProc = "invisible";
+      ProcSubset = "pid";
+      RestrictNamespaces = true;
+      RestrictRealtime = true;
+      RestrictSUIDSGID = true;
+      LockPersonality = true;
+      MemoryDenyWriteExecute = true;
+      SystemCallArchitectures = "native";
+      SystemCallFilter = [ "@system-service" "~@privileged" ];
+      UMask = "0077";
+    };
+
+  mkBackupService = repoName: repo:
     let
       sources = sourcesFor repoName;
       prepareUnits = lib.unique (lib.concatMap (s: s.runBefore) sources);
       paths = lib.unique (lib.concatMap (s: s.paths) sources);
       hidden = lib.filter (e: lib.hasPrefix "/" e && !(lib.elem e paths))
         (lib.unique (lib.concatMap (s: s.exclude) sources));
-      # a repository on a local path does not need any network access
-      isLocal = repo.localPath != null;
     in
     {
       description = "Restic backup to the ${repoName} repository";
@@ -178,65 +304,26 @@ let
       path = [ pkgs.restic ];
       startAt = lib.optional (repo.startAt != null) repo.startAt;
 
-      serviceConfig = {
-        Type = "oneshot";
-        User = user.name;
-        ExecStart = mkScript repoName repo;
-
-        EnvironmentFile = [ secrets.${repo.secret}.path ];
-        Environment = map escapeUnit ([ "RESTIC_CACHE_DIR=${cacheDir}" ]
-          ++ lib.optional isLocal "RESTIC_REPOSITORY=${repo.localPath}");
-
-        # Empty, read-only root: the only things visible are the bind
-        # mounts below. The sops secret is read by systemd through
-        # EnvironmentFile before the namespace is set up, so it is not
-        # mounted at all.
-        TemporaryFileSystem = "/:ro";
-        PrivateTmp = true;
-
-        # Read-only: the Nix store, the files restic needs to run and
-        # exactly the folders of the sources sent to this repository.
-        BindReadOnlyPaths = map escapeUnit ([
-          "/nix/store"
-          "/etc/passwd" # restic stores the user name in each snapshot
-        ] ++ lib.optionals (!isLocal) [
-          "/etc/resolv.conf"
-          "/etc/ssl/certs/ca-certificates.crt"
-        ] ++ paths);
-
-        # Excluded folders are not even readable ("-": ignore if missing).
-        InaccessiblePaths = map (p: "-${escapeUnit p}") hidden;
-
-        # Read-write: only the restic cache and, if local, the repository.
-        BindPaths = map escapeUnit ([ cacheDir ] ++ lib.optional isLocal repo.localPath);
-
-        # Network only for remote repositories.
-        PrivateNetwork = isLocal;
-        RestrictAddressFamilies =
-          if isLocal then [ "AF_UNIX" ] else [ "AF_UNIX" "AF_INET" "AF_INET6" ];
-
-        # Generic hardening: no privileges, no devices, no kernel tweaks.
-        NoNewPrivileges = true;
-        CapabilityBoundingSet = "";
-        PrivateDevices = true;
-        ProtectKernelTunables = true;
-        ProtectKernelModules = true;
-        ProtectKernelLogs = true;
-        ProtectControlGroups = true;
-        ProtectClock = true;
-        ProtectHostname = true;
-        ProtectProc = "invisible";
-        ProcSubset = "pid";
-        RestrictNamespaces = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
-        LockPersonality = true;
-        MemoryDenyWriteExecute = true;
-        SystemCallArchitectures = "native";
-        SystemCallFilter = [ "@system-service" "~@privileged" ];
-        UMask = "0077";
+      serviceConfig = sandbox repo { readOnly = paths; inherit hidden; } // {
+        ExecStart = mkBackupScript repoName repo;
       };
     };
+
+  mkCheckService = repoName: repo: {
+    description = "Restic check of the ${repoName} repository";
+
+    requires = repo.requires;
+    # never at the same time as this host's own backup
+    after = repo.requires ++ [ "backup_${repoName}.service" ];
+
+    path = [ pkgs.restic pkgs.coreutils ];
+    startAt = [ repo.check.startAt ];
+
+    # no source is needed: the check only reads the repository
+    serviceConfig = sandbox repo { } // {
+      ExecStart = mkCheckScript repoName repo;
+    };
+  };
 in
 {
   options.services.backupper = {
@@ -284,8 +371,11 @@ in
     systemd.tmpfiles.rules = [ "d ${cacheDir} 0750 ${user.name} ${user.group} -" ];
 
     systemd.services = lib.mapAttrs' (name: repo:
-      lib.nameValuePair "backup_${name}" (mkService name repo)
-    ) cfg.repositories;
+      lib.nameValuePair "backup_${name}" (mkBackupService name repo)
+    ) cfg.repositories
+    // lib.mapAttrs' (name: repo:
+      lib.nameValuePair "check_${name}" (mkCheckService name repo)
+    ) checkedRepositories;
 
     systemd.timers = lib.mapAttrs' (name: repo:
       lib.nameValuePair "backup_${name}" { timerConfig.RandomizedDelaySec = repo.randomizedDelay; }
@@ -296,6 +386,10 @@ in
         assertion = cfg.repositories ? ${r};
         message = "services.backupper.sources.${name}: unknown repository '${r}'";
       }) s.repositories
-    ) enabledSources);
+    ) enabledSources)
+    ++ lib.mapAttrsToList (name: repo: {
+      assertion = repo.check.readDataRotation == null || repo.check.startAt != null;
+      message = "services.backupper.repositories.${name}.check.readDataRotation needs check.startAt";
+    }) cfg.repositories;
   };
 }

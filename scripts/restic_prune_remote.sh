@@ -46,8 +46,8 @@ echo "Policy:     $KEEP_ARGS (per host and tag)"
 echo
 
 # shellcheck disable=SC2086
-restic forget --verbose --group-by host,tags $KEEP_ARGS --prune "$@"
+restic forget --retry-lock 2h --verbose --group-by host,tags $KEEP_ARGS --prune "$@"
 
 # a dry run changes nothing, no need to check
 case " $* " in *" --dry-run "*|*" -n "*) exit 0 ;; esac
-restic check
+restic check --retry-lock 2h

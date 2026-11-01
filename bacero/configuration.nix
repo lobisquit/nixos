@@ -123,6 +123,8 @@ in
       # the B2 key of this host cannot delete: retention is applied
       # from the PC with `make prune_remote`
       prune = false;
+      # shared with nasus, which checks it in check_remote
+      check.afterBackup = false;
     };
     # declared by miniflux_wrapper.nix
     sources.miniflux.repositories = [ "remote" ];
