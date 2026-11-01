@@ -13,6 +13,12 @@
 
     sops-nix_unstable.url = "github:Mic92/sops-nix";
     sops-nix_unstable.inputs.nixpkgs.follows = "nixpkgs_unstable";
+
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs_unstable";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs = { self,

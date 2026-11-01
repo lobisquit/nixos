@@ -12,6 +12,11 @@ let
   };
 in
 {
+  imports = [
+    inputs.plasma-manager.homeModules.plasma-manager
+    ./plasma.nix
+  ];
+
   nixpkgs = {
     overlays = [
     ];
@@ -156,13 +161,6 @@ in
           hostname = "github.com";
           user = "git";
           identityFile = "/home/enrico/.ssh/github";
-          identitiesOnly = true;
-        };
-
-        "git.lovisotto.it" = {
-          hostname = "git.lovisotto.it";
-          user = "git";
-          identityFile = "/home/enrico/.ssh/git_lovisotto_it";
           identitiesOnly = true;
         };
 
