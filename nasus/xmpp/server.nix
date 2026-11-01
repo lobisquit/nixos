@@ -126,9 +126,9 @@ in
       # Recent NixOS: httpFileShare. On older channels this option is `uploadHttp`.
       httpFileShare = {
         domain = "upload.${domain}";
-        size_limit = 100 * 1024 * 1024;        # 100 MiB per file
-        daily_quota = 1024 * 1024 * 1024;      # 1 GiB per user per day
-        expires_after = "3 months";
+        size_limit = 500 * 1024 * 1024;        # 500 MiB per file
+        daily_quota = 5 * 1024 * 1024 * 1024;      # 5 GiB per user per day
+        expires_after = "1 month";
       };
 
       extraConfig = ''
