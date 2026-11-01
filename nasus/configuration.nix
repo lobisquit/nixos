@@ -165,7 +165,7 @@
 
   services.xmpp_telegram = {
     enable = true;
-    image = "codeberg.org/slidge/slidgram:v0.5.0@sha256:d081775bfeb8ff03eebbea49bb1558edd87f73313a39f78fa054c4ccfa8252ab";
+    image = "codeberg.org/slidge/slidgram:v0.5.1@sha256:7fb29f252d06287e7212627ce4b8920ce57612a5b7ad52b568f486f41ee6c84e";
   };
   services.xmpp_irc.enable = true;
 
