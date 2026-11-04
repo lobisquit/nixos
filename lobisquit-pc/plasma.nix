@@ -75,4 +75,22 @@
       };
     };
   };
+
+  # Dolphin right-click entry: enqueue files/folders in Audacious
+  xdg.dataFile."kio/servicemenus/audacious-enqueue.desktop" = {
+    executable = true;
+    text = ''
+      [Desktop Entry]
+      Type=Service
+      MimeType=audio/*;inode/directory;
+      Actions=enqueue
+      X-KDE-Priority=TopLevel
+
+      [Desktop Action enqueue]
+      Name=Enqueue in Audacious
+      Name[it]=Accoda in Audacious
+      Icon=audacious
+      Exec=${pkgs.audacious}/bin/audacious -e %F
+    '';
+  };
 }
