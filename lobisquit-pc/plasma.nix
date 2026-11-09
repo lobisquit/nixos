@@ -65,6 +65,7 @@
 
       baloofilerc.General."only basic indexing" = true;
 
+      dolphinrc.General.GlobalViewProps = false;
       dolphinrc.General.RememberOpenedTabs = false;
       dolphinrc.IconsMode.PreviewSize = 112;
 
